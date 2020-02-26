@@ -1,29 +1,41 @@
 {
-  "name": "chat-bts",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "tsc": "tsc",
-    "dev": "ts-node-dev --respawn --transpileOnly ./src/index.ts",
-    "prod": "tsc && node ./dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "BLACK ISO",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/express": "^4.17.2",
-    "@types/express-session": "^1.15.16",
-    "@types/node": "^13.7.4",
-    "@types/request": "^2.48.4",
-    "ts-node-dev": "^1.0.0-pre.44",
-    "typescript": "^3.8.2"
-  },
-  "dependencies": {
-    "@overnightjs/core": "^1.6.14",
-    "@overnightjs/logger": "^1.1.10",
-    "body-parser": "^1.19.0",
-    "mysql": "^2.18.1",
-    "tsyringe": "^4.1.0"
-  }
+	"name": "project_cb",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"tsc": "tsc",
+		"dev": "ts-node-dev --respawn --transpileOnly ./src/index.ts",
+		"prod": "tsc && node ./dist/index.js",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Blackiso/Project_CB.git"
+	},
+	"author": "BLACK ISO",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/Blackiso/Project_CB/issues"
+	},
+	"homepage": "https://github.com/Blackiso/Project_CB#readme",
+	"devDependencies": {
+		"@types/express": "^4.17.2",
+		"@types/express-session": "^1.15.16",
+		"@types/node": "^13.7.4",
+		"@types/request": "^2.48.4",
+		"nodemon": "^2.0.2",
+		"ts-node-dev": "^1.0.0-pre.44",
+		"typescript": "^3.8.2"
+	},
+	"dependencies": {
+		"@overnightjs/core": "^1.6.14",
+		"@overnightjs/logger": "^1.1.10",
+		"bcrypt": "^4.0.0",
+		"body-parser": "^1.19.0",
+		"express-useragent": "^1.0.13",
+		"jsonwebtoken": "^8.5.1",
+		"mysql": "^2.18.1",
+		"tsyringe": "^4.1.0"
+	}
 }

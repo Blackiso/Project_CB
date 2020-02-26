@@ -3,6 +3,7 @@ import { Server } from '@overnightjs/core';
 import * as controllers from './controllers';
 import { container } from "tsyringe";
 import { Logger } from '@overnightjs/logger';
+import useragent from 'express-useragent';
 
 
 export class ApiServer extends Server {
@@ -12,6 +13,7 @@ export class ApiServer extends Server {
 
 		this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({extended: true}));
+        this.app.use(useragent.express());
         this.setupControllers();
 	}
 
