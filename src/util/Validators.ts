@@ -11,6 +11,11 @@ export let registerUserValidator = (obj):boolean => {
 	return check;
 };
 
+export let loginUserValidator = (obj):boolean => {
+	let mustHave = ['email', 'password'];
+	return objHasPropertys(obj, mustHave);
+};
+
 export let emailValidator = (email:string):boolean => {
 	return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email);
 };

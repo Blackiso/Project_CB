@@ -18,11 +18,11 @@ export class JWT {
 		return  jwt.sign(payload, user.user_secret, this.options);
 	}
 
-	public verify(user:User, token:string) {
-
+	public verify(token:string, user:User):boolean {
+		return jwt.verify(token, user.user_secret);
 	}
 
 	public decode(token:string) {
-
+		return jwt.decode(token, {complete: true}).payload;
 	}
 }

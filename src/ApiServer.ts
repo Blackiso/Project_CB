@@ -4,6 +4,7 @@ import * as controllers from './controllers';
 import { container } from "tsyringe";
 import { Logger } from '@overnightjs/logger';
 import useragent from 'express-useragent';
+import { JwtMiddleware } from './middleware';
 
 
 export class ApiServer extends Server {
@@ -14,6 +15,7 @@ export class ApiServer extends Server {
 		this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({extended: true}));
         this.app.use(useragent.express());
+        this.app.use(JwtMiddleware);
         this.setupControllers();
 	}
 
@@ -22,7 +24,7 @@ export class ApiServer extends Server {
         for (const name in controllers) {
             if (controllers.hasOwnProperty(name)) {
                 const controller = (controllers as any)[name];
-                Logger.Info('Init Controller => '+name);
+                Logger.Info('Init '+name);
                 ctlrInstances.push(container.resolve(controller));
             }
         }
