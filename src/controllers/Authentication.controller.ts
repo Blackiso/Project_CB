@@ -1,4 +1,3 @@
-import { Request, Response } from 'express';
 import { injectable } from "tsyringe";
 import { Controller, Get, Post, Middleware } from '@overnightjs/core';
 import { AuthenticationService } from '../services';
@@ -6,13 +5,14 @@ import { Logger } from '@overnightjs/logger';
 import { registerUserValidator, loginUserValidator } from '../util';
 import { Err, JWTResponse, AuthenticateResponse } from '../models';
 import { AuthenticationMiddleware } from '../middleware';
+import { SocketServer } from '../websocket/SocketServer';
 
 
 @injectable()
 @Controller('api/authentication')
 export class AuthenticationController {
 
-	constructor(private authService:AuthenticationService) {}
+	constructor(private authService:AuthenticationService, private socket:SocketServer) {}
 
 	@Post('register')
 	private async register(req:Request, res:Response) {
@@ -57,8 +57,9 @@ export class AuthenticationController {
 
 	//For testing..
 	@Get('')
-	@Middleware(AuthenticationMiddleware)
+	// @Middleware(AuthenticationMiddleware)
 	private get(req:Request, res:Response) { 
+		this.socket.test();
 		return res.status(200).send();
 	}
 }

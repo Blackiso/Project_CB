@@ -31,6 +31,9 @@ export class ApiServer extends Server {
         super.addControllers(ctlrInstances);
     }
 
+    get express() {
+        return this.app;
+    }
 
 	public run(port:number):void {
 
