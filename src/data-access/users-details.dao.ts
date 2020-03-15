@@ -1,6 +1,6 @@
 import { injectable } from "tsyringe";
 import { Database, ModelMapper } from '../util';
-import { User } from '../models';
+import { User, Err } from '../models';
 import { Logger } from '@overnightjs/logger';
 
 
@@ -18,20 +18,16 @@ export class UsersDetailsDao {
 	}
 
 	public getUserByEmail(email:string):Promise<User> {
-		return new Promise((resolve, reject) => {
-			this.db.select(this.selectByEmailQr, email).then(data => {
-				if (data.length == 0) {
-					reject();
-				}else {
-					resolve(<User> ModelMapper(data[0], new User()));
-				}
-			});
-		});
+		return this.returnUsersPromise(this.selectByEmailQr, email);
 	}
 
 	public getUserById(id:number):Promise<User> {
+		return this.returnUsersPromise(this.selectByIdQr, id);
+	}
+
+	private returnUsersPromise(query, ...args):Promise<User> {
 		return new Promise((resolve, reject) => {
-			this.db.select(this.selectByIdQr, id).then(data => {
+			this.db.select(query, ...args).then(data => {
 				if (data.length == 0) {
 					reject();
 				}else {
@@ -42,12 +38,11 @@ export class UsersDetailsDao {
 	}
 
 	public async emailExist(email:string):Promise<boolean> {
-		try {
-			let result = await this.db.select(this.selectByEmailQr, email);
-			return result.length > 0;
-		}catch(e) {
-			Logger.Err(e.error || e);
-			return true;
+		let result = await this.db.select(this.selectByEmailQr, email);
+		if (result.length == 0) {
+		 	return true
+		}else {
+			throw new Err("Email already exist!");	
 		}
 	}
 }

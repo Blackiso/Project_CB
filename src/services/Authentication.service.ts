@@ -20,23 +20,16 @@ export class AuthenticationService {
 		user.user_agent = request.useragent.browser+" "+request.useragent.version+" "+request.useragent.os+" "+request.useragent.platform;
 		
 		return new Promise((resolve, reject) => {
-			this.userDao.emailExist(user.user_email).then(x => {
-				if (x) {
-					reject(new Err("Email already exist!"));
-				}else {
-					this.userDao.saveUser(user)
-						.then(x => {
-							let token = new JWT().sign(user);
-							resolve(token);
-						})
-						.catch(err => {
-							reject(err);
-						});
-				}
-			})
-			.catch(err => {
-				reject(err);
-			});
+
+			Promise.all([this.userDao.emailExist(user.user_email), this.userDao.saveUser(user)])
+				.then(x => {
+					let token = new JWT().sign(user);
+					resolve(token);
+				})
+				.catch(err => {
+					reject(err);
+				});
+				
 		});
 	}
 
