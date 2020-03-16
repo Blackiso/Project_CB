@@ -20,7 +20,8 @@ export let roomCreateValidator = (obj):boolean => {
 	let mustHave = ['name', 'privacy'];
 	let check = objHasPropertys(obj, mustHave);
 	if (!nameValidator(obj.name)) throw new Err("Invalid name!");
-	if (obj.privacy !== "public" || obj.privacy !== "private") throw new Err("Invalid privacy!");
+	console.log(obj);
+	if (obj.privacy !== "public" && obj.privacy !== "private") throw new Err("Invalid privacy!");
 	
 	return check;
 }
@@ -34,5 +35,5 @@ export let passwordValidator = (password:string):boolean => {
 };
 
 export let nameValidator = (name:string):boolean => {
-	return /^[a-zA-Z0-9_.-]{3,15}$/.test(name);
+	return /^[a-zA-Z0-9_-]{3,15}$/.test(name);
 }
