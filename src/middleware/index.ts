@@ -35,3 +35,10 @@ export let eventWildCard = (socket, next:any) => {
 	}
 	return next ? next() : null;
 }
+
+export let socketId = (socket, next) => {
+	if (socket.user.user_id) {
+		// socket.id = socket.user.user_id;
+	}
+	next();
+}

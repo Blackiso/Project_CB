@@ -1,18 +1,19 @@
-import { injectable } from "tsyringe";
+import { injectable } from 'tsyringe';
+import { Request, Response } from 'express';
 import { Controller, Get, Post, Middleware } from '@overnightjs/core';
 import { AuthenticationService } from '../services';
 import { Logger } from '@overnightjs/logger';
 import { registerUserValidator, loginUserValidator } from '../util';
 import { Err, JWTResponse, AuthenticateResponse } from '../models';
 import { AuthenticationMiddleware } from '../middleware';
-import { SocketServer } from '../websocket/SocketServer';
+import { Emitter } from '../websocket/emitters/Emitter';
 
 
 @injectable()
 @Controller('api/authentication')
 export class AuthenticationController {
 
-	constructor(private authService:AuthenticationService, private socket:SocketServer) {}
+	constructor(private authService:AuthenticationService, private ws:Emitter) {}
 
 	@Post('register')
 	private async register(req:Request, res:Response) {
@@ -39,7 +40,7 @@ export class AuthenticationController {
 
 			let token = await this.authService.loginUser(req.body);
 			let response = new JWTResponse(token);
-
+			res
 			return res.status(200).send(response);
 		}catch(e) {
 			Logger.Err(e.error || e);
@@ -59,7 +60,8 @@ export class AuthenticationController {
 	@Get('')
 	// @Middleware(AuthenticationMiddleware)
 	private get(req:Request, res:Response) { 
-		this.socket.test();
+		this.ws.sendToAll('test', 'wow!');
+		this.ws.sendToSocket('test', 'hi blackiso', 1582740607942);
 		return res.status(200).send();
 	}
 }

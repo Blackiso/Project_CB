@@ -1,4 +1,4 @@
-import { UsersDetailsDao } from '../data-access/users-details.dao';
+import { UsersDetailsDao } from '../data-access';
 import { Logger } from '@overnightjs/logger';
 import { injectable } from "tsyringe";
 import { User, Err } from '../models';

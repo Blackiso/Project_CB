@@ -44,19 +44,19 @@ export class Authentication {
 				let user = await this.userDao.getUserById(payload.uid);
 				
 				if (!this.jwt.verify(token, user)) {
-					Logger.Err("Invalid token!");
-					throw new Error();
+					Logger.Err('Invalid token!');
+					throw new Error('Invalid token!');
 				}else {
 					socket.user = user;
 					next();
 				}
 			}else {
 				Logger.Err('Token not found');
-				throw new Error();
+				throw new Error('Token not found');
 			}
 			
 		}catch(e) {
-			Logger.Err('Next');
+			Logger.Err(e.error || 'Token Error');
 			next(new Error('Authentication error'));
 		}
 
