@@ -12,8 +12,13 @@ export class Database {
 	private DATA:string = "project_cb";
 
 	private connection:any;
+	private reconnecting:any;
 
 	constructor() {
+		this.createConnection();
+	}
+
+	private createConnection() {
 		this.connection = mysql.createConnection({
 			host: this.HOST,
 			user: this.USER,
@@ -24,8 +29,18 @@ export class Database {
 		this.connection.connect((err) => {
 			if (err) {
 				Logger.Err(err);
+				Logger.Info('Re-connecting lost connection');
+
+				if (this.reconnecting == null) {
+					this.reconnecting = setInterval(() => {
+						this.createConnection();
+					}, 3000);
+				}
+				
 				return;
 			}
+			clearInterval(this.reconnecting);
+			this.reconnecting = null;
 			Logger.Info('Database connected!');
 		});
 	}
