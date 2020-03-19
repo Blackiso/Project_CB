@@ -4,8 +4,8 @@ import { Controller, Get, Post, Middleware } from '@overnightjs/core';
 import { AuthenticationMiddleware } from '../middleware';
 import { Logger } from '@overnightjs/logger';
 import { RoomsService } from '../services';
-import { roomCreateValidator } from '../util';
-import { Err, Room, RoomResponse } from '../models';
+import { roomCreateValidator, joinRoomValidator, ModelMapper } from '../util';
+import { Err, Room, RoomResponse, UserResponse } from '../models';
 
 
 @injectable()
@@ -32,8 +32,29 @@ export class RoomsController {
 			roomResponse.room_privacy = response.room_privacy;
 			roomResponse.room_desc = response.room_desc;
 			roomResponse.room_mods = [];
+			
+			// this.roomsService.joinRoom(req.user, response.room_id);
 
 			return res.status(200).send(roomResponse);
+
+		}catch(e) {
+			Logger.Err(e.error || e);
+			return res.status(400).send(e);
+		}
+		
+	}
+
+	@Post('join')
+	@Middleware(AuthenticationMiddleware)
+	public async joinRoom(req:Request | any, res:Response) {
+
+		try {
+
+			if (!joinRoomValidator(req.body)) throw new Err("Bad Request!");
+			let user =  <UserResponse> ModelMapper(req.user, new UserResponse);
+			await this.roomsService.joinRoom(user, req.body.room, req.body.sid);
+
+			return res.status(200).send();
 
 		}catch(e) {
 			Logger.Err(e.error || e);

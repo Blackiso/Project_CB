@@ -20,8 +20,15 @@ export let roomCreateValidator = (obj):boolean => {
 	let mustHave = ['name', 'privacy'];
 	let check = objHasPropertys(obj, mustHave);
 	if (!nameValidator(obj.name)) throw new Err("Invalid name!");
-	console.log(obj);
 	if (obj.privacy !== "public" && obj.privacy !== "private") throw new Err("Invalid privacy!");
+	
+	return check;
+}
+
+export let joinRoomValidator = (obj):boolean => {
+	let mustHave = ['room', 'sid'];
+	let check = objHasPropertys(obj, mustHave);
+	if (!nameValidator(obj.room)) throw new Err("Invalid name!");
 	
 	return check;
 }

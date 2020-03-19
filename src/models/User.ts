@@ -8,4 +8,7 @@
  	user_agent:string;
  	user_secret:string;
 
+ 	is_admin:boolean = false;
+ 	is_mod:boolean = false;
+
 }

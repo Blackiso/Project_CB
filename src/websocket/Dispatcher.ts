@@ -1,4 +1,4 @@
-import { TestHandler } from './handlers';
+import { TestHandler } from './event-handlers';
 import { EventHandler } from '../interfaces';
 
 export class Dispatcher {

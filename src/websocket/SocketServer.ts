@@ -4,7 +4,7 @@ import io = require('socket.io');
 import { Logger } from '@overnightjs/logger';
 import { Dispatcher } from './Dispatcher';
 import { AuthenticationWSMiddleware, eventWildCard, socketId } from '../middleware';
-import { Emitter } from './emitters/Emitter';
+import { SocketsHandler } from './SocketsHandler';
  
 //Main socket that accepts new sockets
 
@@ -16,7 +16,7 @@ export class SocketServer {
 	private io:any;
 	private port:number;
 
-	constructor(private dispatcher:Dispatcher, private emitter:Emitter) {}
+	constructor(private dispatcher:Dispatcher, private socketsHandler:SocketsHandler) {}
 
 	init(server) {
 		this.io = io(server);
@@ -25,7 +25,7 @@ export class SocketServer {
 		this.io.use(socketId);
 		this.io.use(eventWildCard);
 		this.io.on('connection', this.newClient.bind(this));
-		this.emitter.mainSocket = this.io;
+		this.socketsHandler.mainSocket = this.io;
 	}
 
 	newClient(socket:SocketIO.Socket | any) {
@@ -35,9 +35,9 @@ export class SocketServer {
 		});
 		socket.on('disconnect', () => {
 			Logger.Info(socket.user.username+" disconnected");
-			this.emitter.removeSocket(socket);
+			this.socketsHandler.removeSocket(socket);
 		});
-		this.emitter.addSocket(socket);
+		this.socketsHandler.addSocket(socket);
 	}
 
 }

@@ -1,44 +1,66 @@
+import { singleton, injectable } from 'tsyringe';
 import { Logger } from '@overnightjs/logger';
+import { User,Err } from '../models';
+import { RedisClient } from '../util/RedisClient';
 
-//Bind users to sockets and catch events from socket and invoke dispatcher
-
+@singleton()
+@injectable()
 export class SocketsHandler {
-
-	private sockets:any = [];
 	
-	constructor() {}
+	private _mainSocket:any;
 
-	addSocket(socket) {
-		// if (!this.sockets[namespace]) this.sockets[namespace] = [];
+	constructor(private redis:RedisClient) {}
 
-		socket.on('disconnect', this.disconnected.bind(this, socket));
-		socket.on('INFO', this.event.bind(this, socket, 'INFO'));
-		socket.on('MESG', this.event.bind(this, socket, 'MESG'));
-		socket.on('ERRO', this.event.bind(this, socket, 'ERRO'));
-
-		// let obj = {
-		// 	socket: socket,
-		// 	namespace: namespace
-		// }
-
-		// this.sockets[namespace].push(obj);
-		this.sockets.push(socket);
+	set mainSocket(m) {
+		this._mainSocket = m;
 	}
 
-	removeSocket(socket) {
-		let index = this.sockets.indexOf(socket);
-		this.sockets.splice(index, 1);
+	addSocket(socket:SocketIO.Socket | any) {
+		this.redis.addStringToList(socket.user.user_id, socket.id).then(Logger.Info).catch(Logger.Err);
 	}
 
-	disconnected(socket) {
-		Logger.Info('Client Disconnected!');
-		this.removeSocket(socket);
+	removeSocket(socket:SocketIO.Socket | any) {
+		this.redis.removeFromList(socket.user.user_id, socket.id).then(Logger.Info).catch(Logger.Err);
 	}
 
-	event(socket, event, msg) {
-		Logger.Info('New message!');
-		console.log(event, msg);
-		socket.emit(event, msg);
+	sendToRoom(type, message, room) {
+		this._mainSocket.to(room).emit(type, message);
+	}
+
+	sendToAll(type, message) {
+		this._mainSocket.emit(type, message);
+	}
+
+	sendToSocket(event, message, uid) {
+		this.redis.getAllList(uid).then(
+			sockets => {
+				console.log(sockets);
+				sockets.forEach(socketId => {
+					this._mainSocket.of('/').connected[socketId].emit(event, message);
+				});
+			},
+			Logger.Err
+		);
+	}
+
+	addSocketToRoom(sid, room, uid) {
+		return new Promise((resolve, reject) => {
+			this.redis.getAllList(uid).then(
+				sockets => {
+					let found = false;
+					
+					sockets.forEach(socketId => {
+						if (socketId == sid) {
+							this._mainSocket.of('/').connected[socketId].join(room);
+							found = true;
+							resolve();
+						}
+					});
+					if (sockets.length == 0 || !found) reject(new Err('Socket not connected!'));
+				},
+				reject
+			);
+		});
 	}
 
 }

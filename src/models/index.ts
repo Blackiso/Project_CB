@@ -4,3 +4,4 @@ export * from './RoomResponse';
 export * from './Err';
 export * from './JWTResponse';
 export * from './AuthenticateResponse';
+export * from './UserResponse';

@@ -25,6 +25,8 @@ connect.addEventListener('click', () => {
 
 	mySocket.on('connect', () => {
 		insertLog('INFO', 'Socket Connected!');
+		insertLog('INFO', mySocket.id);
+
 	});
 
 	mySocket.on('MESG', (data) => {

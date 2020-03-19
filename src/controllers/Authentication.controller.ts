@@ -6,14 +6,14 @@ import { Logger } from '@overnightjs/logger';
 import { registerUserValidator, loginUserValidator } from '../util';
 import { Err, JWTResponse, AuthenticateResponse } from '../models';
 import { AuthenticationMiddleware } from '../middleware';
-import { Emitter } from '../websocket/emitters/Emitter';
+import { SocketsHandler } from '../websocket/SocketsHandler';
 
 
 @injectable()
 @Controller('api/authentication')
 export class AuthenticationController {
 
-	constructor(private authService:AuthenticationService, private ws:Emitter) {}
+	constructor(private authService:AuthenticationService, private ws:SocketsHandler) {}
 
 	@Post('register')
 	private async register(req:Request, res:Response) {
