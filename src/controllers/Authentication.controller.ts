@@ -40,7 +40,7 @@ export class AuthenticationController {
 
 			let token = await this.authService.loginUser(req.body);
 			let response = new JWTResponse(token);
-			res
+
 			return res.status(200).send(response);
 		}catch(e) {
 			Logger.Err(e.error || e);

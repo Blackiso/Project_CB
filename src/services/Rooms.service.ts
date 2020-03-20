@@ -11,7 +11,7 @@ export class RoomsService {
 	constructor(private roomDao:RoomsDao, private ws:SocketsHandler) {}
 
 	public createRoom(user:User, data) {
-		
+
 		let room = new Room();
 		room.room_id = data.name;
 		room.room_desc = data.desc || null;
@@ -31,15 +31,11 @@ export class RoomsService {
 	public joinRoom(user:UserResponse, room, sid) {
 
 		return new Promise((resolve, reject) => {
-			Promise.all([this.roomDao.checkRoom(room), this.checkRoomAdmin(user.user_id, room)])
+			Promise.all([this.roomDao.checkRoom(room), this.checkRoomAdmin(user.user_id, room), this.ws.addSocketToRoom(sid, room, user.user_id)])
 				.then(data => {
-					user.is_admin = data[1];
-					this.ws.addSocketToRoom(sid, room, user.user_id).then(
-						x => {
-							this.ws.sendToRoom('test', user.username+' joined', room);
-							resolve();
-						}
-					).catch(reject);
+					user.is_admin = data[1] as boolean;
+					this.ws.sendToRoom('test', user.username+' joined', room);
+					resolve();
 				})
 				.catch(reject)
 		});
