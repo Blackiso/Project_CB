@@ -27,13 +27,11 @@ export class RoomsController {
 				user_id: req.user.user_id,
 				username: req.user.username
 			};
-			roomResponse.room_admin = user;
+			roomResponse.room_owner = user;
 			roomResponse.room_id = response.room_id;
 			roomResponse.room_privacy = response.room_privacy;
 			roomResponse.room_desc = response.room_desc;
 			roomResponse.room_mods = [];
-			
-			// this.roomsService.joinRoom(req.user, response.room_id);
 
 			return res.status(200).send(roomResponse);
 
@@ -51,9 +49,10 @@ export class RoomsController {
 		try {
 
 			if (!joinRoomValidator(req.body)) throw new Err("Bad Request!");
-			let user =  <UserResponse> ModelMapper(req.user, new UserResponse);
+			let { user_id, username } = req.user;
+			let user =  <UserResponse> ModelMapper({ user_id, username }, new UserResponse());
 			await this.roomsService.joinRoom(user, req.body.room, req.body.sid);
-
+			Logger.Info(user.username+' joined '+req.body.room);
 			return res.status(200).send();
 
 		}catch(e) {
@@ -61,6 +60,38 @@ export class RoomsController {
 			return res.status(400).send(e);
 		}
 		
+	}
+
+	@Get('details/:id')
+	@Middleware(AuthenticationMiddleware)
+	public async roomDetails(req:Request | any, res:Response) {
+
+		try {
+
+			let room = await this.roomsService.getRoomDetails(req.params.id);
+			return res.status(200).send(room);
+
+		}catch(e) {
+			Logger.Err(e.error || e);
+			return res.status(400).send(e);
+		}
+
+	}
+
+	@Get('joined')
+	@Middleware(AuthenticationMiddleware)
+	public async listJoinedRooms(req:Request | any, res:Response) {
+
+		try {
+
+			let rooms = await this.roomsService.getJoinedRooms(req.user.user_id);
+			return res.status(200).send(rooms);
+
+		}catch(e) {
+			Logger.Err(e.error || e);
+			return res.status(400).send(e);
+		}
+
 	}
 
 }

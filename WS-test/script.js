@@ -16,7 +16,7 @@ var token = document.querySelector('#token');
 var room = document.querySelector('#room');
 var join = document.querySelector('#join');
 
-token.value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjE1ODI3NDA2MDc5NDIsInVubSI6IkJsYWNraXNvIiwiZW1sIjoiYmxhY2tAZW1haWwuY29tIiwiaWF0IjoxNTg0MjkzNDc5LCJleHAiOjE1ODQ4OTgyNzl9.4EluMk09gy5tZBO60LTOZEFN-g9hYPWRPYCOCcEKXnA";
+token.value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjE1ODI3NDA2MDc5NDIsInVubSI6IkJsYWNraXNvIiwiZW1sIjoiYmxhY2tAZW1haWwuY29tIiwiaWF0IjoxNTg0OTAwMzg2LCJleHAiOjE1ODU1MDUxODZ9.1s-76SAUXFZexr9zJVcs8Dhl2rn3PuQPdWeR_Yh4v5o";
 
 connect.addEventListener('click', () => {
 
@@ -33,8 +33,16 @@ connect.addEventListener('click', () => {
 		insertLog('MESG', data);
 	});
 
-	mySocket.on('test', (data) => {
-		insertLog('test', data);
+	mySocket.on('INFO', (data) => {
+		insertLog('INFO', data);
+	});
+
+	mySocket.on('USERS', (data) => {
+
+		data.forEach(user => {
+			insertLog('ONLINE', user.username);
+		});
+		
 	});
 
 	disconnect.addEventListener('click', () => {

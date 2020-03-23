@@ -28,6 +28,7 @@ export class Authentication {
 				next();
 			}
 		}catch(e) {
+			Logger.Err('Unautorized request!');
 			return res.status(this.errorno).send(new Err(this.error, this.errorno));
 		}
 		

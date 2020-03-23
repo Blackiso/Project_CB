@@ -26,7 +26,7 @@ export class RedisClient {
 	}
 
 	addObjectTolist(key, obj) {
-
+		return this.addStringToList(key, JSON.stringify(obj));
 	}
 
 	removeFromList(key, value) {
@@ -34,8 +34,39 @@ export class RedisClient {
 		return lrem(key, 0, value);
 	}
 
+	deleteList(key) {
+		let del = promisify(this.client.del).bind(this.client);
+		return del(key);
+	}
+
 	getAllList(key) {
 		let lrange = promisify(this.client.lrange).bind(this.client);
 		return lrange(key, 0, -1);
 	}
+
+	addHashKey(hash, key, value) {
+		if (typeof value == "object") value = JSON.stringify(value);
+		let hset = promisify(this.client.hset).bind(this.client);
+		return hset(hash, key, value);
+	}
+
+	getHashKey(hash, key) {
+		let hget = promisify(this.client.hget).bind(this.client);
+		return hget(hash, key);
+	}
+
+	deleteHasKey(hash, key) {
+		let hdel = promisify(this.client.hdel).bind(this.client);
+		return hdel(hash, key);
+	}
+
+	getHash(hash) {
+		let hgetall = promisify(this.client.hgetall).bind(this.client);
+		return hgetall(hash);
+	}
+
+	deleteHash() {
+
+	}
+
 }

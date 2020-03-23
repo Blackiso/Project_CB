@@ -77,6 +77,26 @@ export class Database {
 		});
 	}
 
+	public selectIn(statement, values:Array<string | number | boolean>) {
+		let _in = "";
+		values.forEach(value => {
+			_in += "'"+this.mysql_real_escape_string(value.toString())+"'";
+		});
+		let query = statement.replace('?', _in);
+
+		Logger.Imp(query);
+
+		return new Promise((resolve, error) => {
+			this.connection.query(query, (err, results) => {
+				if (err) {
+					error(new Err(err.sqlMessage, err.errno));
+				}else {
+					resolve(results);
+				}
+			});
+		}); 
+	}
+
 	private prepareQuery(qr:string, args:Array<string>) {
 		args.forEach(arg => {
 			qr = qr.replace('?', "'"+this.mysql_real_escape_string(arg)+"'");

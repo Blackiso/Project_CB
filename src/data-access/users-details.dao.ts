@@ -10,6 +10,7 @@ export class UsersDetailsDao {
 	private insertQr:string = "INSERT INTO users_details VALUES (?,?,?,?,?,?,?)";
 	private selectByIdQr:string = "SELECT * FROM users_details WHERE user_id=?";
 	private selectByEmailQr:string = "SELECT * FROM users_details WHERE user_email=?";
+	private selectUsers:string = "SELECT user_id, username FROM users_details WHERE user_id IN (?)";
 
 	constructor(private db:Database) {}
 
@@ -25,11 +26,15 @@ export class UsersDetailsDao {
 		return this.returnUsersPromise(this.selectByIdQr, id);
 	}
 
+	public getUsersById(ids:Array<number>):Promise<any> {
+		return this.db.selectIn(this.selectUsers, ids);
+	}
+
 	private returnUsersPromise(query, ...args):Promise<User> {
 		return new Promise((resolve, reject) => {
 			this.db.select(query, ...args).then(data => {
 				if (data.length == 0) {
-					reject();
+					reject(new Err('User not found!'));
 				}else {
 					resolve(<User> ModelMapper(data[0], new User()));
 				}

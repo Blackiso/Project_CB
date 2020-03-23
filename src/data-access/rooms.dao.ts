@@ -10,6 +10,7 @@ export class RoomsDao {
 	private insertQr:string = "INSERT INTO rooms VALUES (?,?,?,?)";
 	private selectByIdQr:string = "SELECT * FROM rooms WHERE room_id=?";
 	private selectAdmin:string = "SELECT room_owner FROM rooms WHERE room_id=?";
+	private userRooms:string = "SELECT r.room_id, r.room_owner, r.room_privacy, r.room_desc FROM rooms AS r INNER JOIN users_rooms AS ur ON ur.room_id = r.room_id WHERE ur.user_id = ? ORDER BY ur.id DESC";
 
 	constructor(private db:Database) {}
 
@@ -27,9 +28,7 @@ export class RoomsDao {
 						resolve(<Room>data[0]);
 					}
 				})
-				.catch(e => {
-					reject(e);
-				});
+				.catch(reject);
 		});
 	}
 
@@ -51,8 +50,14 @@ export class RoomsDao {
 		}
 	}
 
-	public getRoomAdmin(room):Promise<any> {
-		return this.db.select(this.selectAdmin, room);
+	public async getRoomAdmin(room):Promise<any> {
+		let room_owner = await this.db.select(this.selectAdmin, room);
+		if (room_owner.length == 0) return new Err('Room admin not found!');
+		return room_owner[0].room_owner;
+	}
+
+	public listUserRooms(user_id) {
+		return this.db.select(this.userRooms, user_id);
 	}
 
 }
