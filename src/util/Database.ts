@@ -15,16 +15,16 @@ export class Database {
 	private reconnecting:any;
 
 	constructor() {
-		this.createConnection();
-	}
-
-	private createConnection() {
 		this.connection = mysql.createConnection({
 			host: this.HOST,
 			user: this.USER,
 			password: this.PASS,
 			database: this.DATA
 		});
+		this.createConnection();
+	}
+
+	private createConnection() {
 
 		this.connection.connect((err) => {
 			if (err) {

@@ -1,4 +1,4 @@
-import { UsersDetailsDao } from '../data-access';
+import { UsersDetailsDaoSql, UsersDetailsDao } from '../data-access';
 import { Logger } from '@overnightjs/logger';
 import { injectable } from "tsyringe";
 import { User, Err } from '../models';
@@ -7,7 +7,7 @@ import { passwordHash, generateKey, JWT, ModelMapper, checkPasswordHash } from '
 @injectable()
 export class AuthenticationService {
 	
-	constructor(private userDao:UsersDetailsDao) {}
+	constructor(private userDao:UsersDetailsDaoSql, private userMongo:UsersDetailsDao) {}
 
 	public registerUser(request:Request | any):Promise<string> {
 		let data = request.body;

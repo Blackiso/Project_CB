@@ -2,7 +2,7 @@ import { Logger } from '@overnightjs/logger';
 import { injectable } from "tsyringe";
 import { User, Err, Room, UserResponse, RoomResponse } from '../models';
 import { SocketsHandler } from '../websocket/SocketsHandler';
-import { RoomsDao, UsersDetailsDao, UsersRoomsDao } from '../data-access';
+import { RoomsDao, UsersDetailsDaoSql, UsersRoomsDao } from '../data-access';
 import { RedisClient } from '../util/RedisClient';
 import { ModelMapper } from '../util';
 
@@ -16,7 +16,7 @@ export class RoomsService {
 		private usersRoomsDao:UsersRoomsDao,  
 		private ws:SocketsHandler, 
 		private redis:RedisClient, 
-		private usersDao:UsersDetailsDao
+		private usersDao:UsersDetailsDaoSql
 	) {}
 
 	public async createRoom(user:User, data) {

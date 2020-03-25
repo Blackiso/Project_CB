@@ -2,7 +2,7 @@ import { injectable, singleton } from "tsyringe";
 import { Logger } from '@overnightjs/logger';
 import { Err, User } from '../models';
 import { JWT } from '../util';
-import { UsersDetailsDao } from '../data-access/users-details.dao';
+import { UsersDetailsDaoSql } from '../data-access/';
 
 @injectable()
 @singleton()
@@ -11,7 +11,7 @@ export class Authentication {
 	private error:string = "Unautorized request!";
 	private errorno:number = 401;
 
-	constructor(private userDao:UsersDetailsDao, private jwt:JWT) {}
+	constructor(private userDao:UsersDetailsDaoSql, private jwt:JWT) {}
 
 	public async authenticate(req:any, res:any, next:any) {
 
