@@ -4,7 +4,7 @@ import { Controller, Get, Post, Middleware } from '@overnightjs/core';
 import { AuthenticationService } from '../services';
 import { Logger } from '@overnightjs/logger';
 import { registerUserValidator, loginUserValidator } from '../util';
-import { Err, JWTResponse, AuthenticateResponse } from '../models';
+import { Err, JWTResponse, UserResponse } from '../models';
 import { AuthenticationMiddleware } from '../middleware';
 import { SocketsHandler } from '../websocket/SocketsHandler';
 
@@ -27,7 +27,7 @@ export class AuthenticationController {
 			return res.status(200).send(response);
 		}catch(e) {
 			Logger.Err(e.error || e);
-			return res.status(400).send(e);
+			return res.status(e.code || 400).send(e);
 		}
 
 	}
@@ -44,7 +44,7 @@ export class AuthenticationController {
 			return res.status(200).send(response);
 		}catch(e) {
 			Logger.Err(e.error || e);
-			return res.status(400).send(e);
+			return res.status(e.code || 400).send(e);
 		}
 
 	}
@@ -52,7 +52,7 @@ export class AuthenticationController {
 	@Get('authenticate')
 	@Middleware(AuthenticationMiddleware)
 	private autheticate(req:Request | any, res:Response) {
-		return res.status(200).send(new AuthenticateResponse(req.user));
+		return res.status(200).send(new UserResponse(req.user));
 	}
 
 

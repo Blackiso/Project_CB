@@ -5,6 +5,7 @@ import { container } from "tsyringe";
 import { Logger } from '@overnightjs/logger';
 import useragent from 'express-useragent';
 import { JwtMiddleware } from './middleware';
+import { MongoDb } from './util';
 
 
 export class ApiServer extends Server {
@@ -12,10 +13,13 @@ export class ApiServer extends Server {
 	constructor() {
 		super();
 
+        let db = new MongoDb();
+
 		this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({extended: true}));
         this.app.use(useragent.express());
         this.app.use(JwtMiddleware);
+        
         this.setupControllers();
 	}
 

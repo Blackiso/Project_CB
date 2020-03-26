@@ -37,7 +37,7 @@ export class RoomsController {
 
 		}catch(e) {
 			Logger.Err(e.error || e);
-			return res.status(400).send(e);
+			return res.status(e.code || 400).send(e);
 		}
 		
 	}
@@ -57,7 +57,7 @@ export class RoomsController {
 
 		}catch(e) {
 			Logger.Err(e.error || e);
-			return res.status(400).send(e);
+			return res.status(e.code || 400).send(e);
 		}
 		
 	}
@@ -73,7 +73,7 @@ export class RoomsController {
 
 		}catch(e) {
 			Logger.Err(e.error || e);
-			return res.status(400).send(e);
+			return res.status(e.code || 400).send(e);
 		}
 
 	}
@@ -89,7 +89,7 @@ export class RoomsController {
 
 		}catch(e) {
 			Logger.Err(e.error || e);
-			return res.status(400).send(e);
+			return res.status(e.code || 400).send(e);
 		}
 
 	}

@@ -10,16 +10,16 @@ export class JWT {
 	
 	public sign(user:User):string {
 		let payload = {
-			uid: user.user_id,
+			uid: user._id,
 			unm: user.username,
 			eml: user.user_email
 		};
 
-		return  jwt.sign(payload, user.user_secret, this.options);
+		return  jwt.sign(payload, user.user_key, this.options);
 	}
 
 	public verify(token:string, user:User):boolean {
-		return jwt.verify(token, user.user_secret);
+		return jwt.verify(token, user.user_key);
 	}
 
 	public decode(token:string) {

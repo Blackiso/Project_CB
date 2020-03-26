@@ -1,54 +1,46 @@
-import { UsersDetailsDaoSql, UsersDetailsDao } from '../data-access';
+import { UsersDetailsDao } from '../data-access';
 import { Logger } from '@overnightjs/logger';
 import { injectable } from "tsyringe";
 import { User, Err } from '../models';
-import { passwordHash, generateKey, JWT, ModelMapper, checkPasswordHash } from '../util';
+import { passwordHash, generateKey, JWT, checkPasswordHash } from '../util';
 
 @injectable()
 export class AuthenticationService {
 	
-	constructor(private userDao:UsersDetailsDaoSql, private userMongo:UsersDetailsDao) {}
+	constructor(private userDao:UsersDetailsDao) {}
 
-	public registerUser(request:Request | any):Promise<string> {
+	public async registerUser(request:Request | any):Promise<string> {
+
 		let data = request.body;
 		let user = new User();
-		user.user_id = new Date().valueOf();
 		user.username = data.username;
 		user.user_email = data.email;
 		user.user_password = passwordHash(data.password);
-		user.user_secret = generateKey();
-		user.user_agent = request.useragent.browser+" "+request.useragent.version+" "+request.useragent.os+" "+request.useragent.platform;
+		user.user_key = generateKey();
 		
-		return new Promise((resolve, reject) => {
+		if (!(await this.userDao.checkProperty({ user_email: user.user_email }))) {
+		 	throw new Err('Invalid Email!');
+		} 
 
-			Promise.all([this.userDao.emailExist(user.user_email), this.userDao.saveUser(user)])
-				.then(x => {
-					let token = new JWT().sign(user);
-					resolve(token);
-				})
-				.catch(err => {
-					reject(err);
-				});
-				
-		});
+		if (!(await this.userDao.checkProperty({ username: user.username }))) {
+		 	throw new Err('Invalid Username!');
+		}
+
+		let savedUser = await this.userDao.saveUser(user);
+		return new JWT().sign(savedUser);
+		
 	}
 
-	public loginUser(data:any):Promise<string> {
-		return new Promise((resolve, reject) => {
-			this.userDao.getUserByEmail(data.email).then(
-				user => {
-					if (!checkPasswordHash(data.password, user.user_password)) {
-						Logger.Err("Password check failed!");
-						reject(new Err("User not found!"));
-					}else {
-						let token = new JWT().sign(user);
-						resolve(token);
-					}
-				}
-			)
-			.catch(err => {
-				reject(new Err("User not found!"));
-			});
-		});
+	public async loginUser(data:any):Promise<string> {
+
+		let user = await this.userDao.getUserByEmail(data.email);
+		if (!user) throw new Err("User not found!", 401);
+
+		if (!checkPasswordHash(data.password, user.user_password)) {
+			Logger.Err("Password check failed!");
+			throw new Err("Authentication failed!", 401);
+		}
+		
+		return new JWT().sign(user);
 	}
 }

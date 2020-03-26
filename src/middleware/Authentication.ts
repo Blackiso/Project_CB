@@ -2,7 +2,7 @@ import { injectable, singleton } from "tsyringe";
 import { Logger } from '@overnightjs/logger';
 import { Err, User } from '../models';
 import { JWT } from '../util';
-import { UsersDetailsDaoSql } from '../data-access/';
+import { UsersDetailsDao } from '../data-access/';
 
 @injectable()
 @singleton()
@@ -11,7 +11,7 @@ export class Authentication {
 	private error:string = "Unautorized request!";
 	private errorno:number = 401;
 
-	constructor(private userDao:UsersDetailsDaoSql, private jwt:JWT) {}
+	constructor(private userDao:UsersDetailsDao, private jwt:JWT) {}
 
 	public async authenticate(req:any, res:any, next:any) {
 
@@ -46,19 +46,19 @@ export class Authentication {
 				
 				if (!this.jwt.verify(token, user)) {
 					Logger.Err('Invalid token!');
-					throw new Error('Invalid token!');
+					throw new Err('Invalid token!');
 				}else {
 					socket.user = user;
 					next();
 				}
 			}else {
 				Logger.Err('Token not found');
-				throw new Error('Token not found');
+				throw new Err('Token not found');
 			}
 			
 		}catch(e) {
 			Logger.Err(e.error || 'Token Error');
-			next(new Error('Authentication error'));
+			next(new Err('Authentication error'));
 		}
 
 	}

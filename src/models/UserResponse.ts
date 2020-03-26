@@ -1,9 +1,16 @@
- export class UserResponse {
+import { User } from '../models';
+
+export class UserResponse {
  	
- 	user_id:number;
+ 	_id:string;
  	username:string;
  	user_email:string;
- 	is_admin:boolean = false;
- 	is_mod:boolean = false;
+ 	user_image:string;
 
+ 	constructor(user:User) {
+ 		this._id = user._id;
+ 		this.username = user.username;
+ 		this.user_email = user.user_email;
+ 		this.user_image = user.user_image;
+ 	}
 }

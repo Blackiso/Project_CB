@@ -1,14 +1,10 @@
- export class User {
+export class User {
  	
- 	user_id:number;
+ 	_id:string;
  	username:string;
  	user_email:string;
  	user_password:string;
- 	user_location:string;
- 	user_agent:string;
- 	user_secret:string;
-
- 	is_admin:boolean = false;
- 	is_mod:boolean = false;
+ 	user_image:string;
+ 	user_key:string;
 
 }
