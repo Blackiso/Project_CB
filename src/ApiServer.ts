@@ -11,20 +11,20 @@ import { MongoDb } from './util';
 export class ApiServer extends Server {
 
 	constructor() {
-		super();
+        super();
 
         let db = new MongoDb();
 
-		this.app.use(bodyParser.json());
+        this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({extended: true}));
         this.app.use(useragent.express());
         this.app.use(JwtMiddleware);
-        
+
         this.setupControllers();
 	}
 
 	private setupControllers():void {
-	 	const ctlrInstances = [];
+        const ctlrInstances = [];
         for (const name in controllers) {
             if (controllers.hasOwnProperty(name)) {
                 const controller = (controllers as any)[name];
@@ -39,11 +39,9 @@ export class ApiServer extends Server {
         return this.app;
     }
 
-	public run(port:number):void {
-
-		this.app.listen(port, () => {
-			Logger.Info('Server started listening on port '+port);
-		});
-
-	}
+    public run(port:number):void {
+        this.app.listen(port, () => {
+            Logger.Info('Server started listening on port '+port);
+        });
+    }
 }

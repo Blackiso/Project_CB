@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Schema, ObjectId, Model } from 'mongoose';
+import { Schema, ObjectId } from 'mongoose';
 import { injectable, singleton } from "tsyringe";
 import { User, Err } from '../models';
 import { Logger } from '@overnightjs/logger';
@@ -26,9 +26,8 @@ export class UsersDetailsDao {
 		this.UserModel = this.getUserModel();
 	}	
 
-	public async saveUser(user:User):Promise<Model> {
-		let UserModel = this.getUserModel();
-		let _user = new UserModel({
+	public async saveUser(user:User):Promise<User> {
+		let _user = new this.UserModel({
 			username: user.username,
 			user_email: user.user_email,
 			user_image: 'default.png',
@@ -36,10 +35,11 @@ export class UsersDetailsDao {
 			user_password: user.user_password,
 			register_date: new Date()
 		});
+
 		return await _user.save();
 	}
 
-	public async getUserByEmail(email:string):Promise<User | null> {
+	public async getUserByEmail(email:string):Promise<User> {
 		let user = await this.UserModel.findOne({ user_email: email });
 		return user;
 	}
@@ -63,4 +63,5 @@ export class UsersDetailsDao {
 	private getUserModel() { 
 		return mongoose.model('User', this.usersSchema);
 	}
+	
 }

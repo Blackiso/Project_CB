@@ -31,11 +31,11 @@ export class Database {
 				Logger.Err(err);
 				Logger.Info('Re-connecting lost connection');
 
-				if (this.reconnecting == null) {
-					this.reconnecting = setInterval(() => {
-						this.createConnection();
-					}, 3000);
-				}
+				// if (this.reconnecting == null) {
+				// 	this.reconnecting = setInterval(() => {
+				// 		this.createConnection();
+				// 	}, 3000);
+				// }
 				
 				return;
 			}

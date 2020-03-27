@@ -16,11 +16,11 @@ export class SocketsHandler {
 	}
 
 	addSocket(socket:SocketIO.Socket | any) {
-		this.redis.addStringToList(socket.user.user_id, socket.id).then(Logger.Info).catch(Logger.Err);
+		this.redis.addStringToList(socket.user._id.toString(), socket.id).then(Logger.Info).catch(Logger.Err);
 	}
 
 	removeSocket(socket:SocketIO.Socket | any) {
-		this.redis.removeFromList(socket.user.user_id, socket.id).then(Logger.Info).catch(Logger.Err);
+		this.redis.removeFromList(socket.user._id.toString(), socket.id).then(Logger.Info).catch(Logger.Err);
 	}
 
 	sendToRoom(type, message, room) {

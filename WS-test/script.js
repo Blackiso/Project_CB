@@ -16,7 +16,7 @@ var token = document.querySelector('#token');
 var room = document.querySelector('#room');
 var join = document.querySelector('#join');
 
-token.value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjE1ODI3NDA2MDc5NDIsInVubSI6IkJsYWNraXNvIiwiZW1sIjoiYmxhY2tAZW1haWwuY29tIiwiaWF0IjoxNTg0OTAwMzg2LCJleHAiOjE1ODU1MDUxODZ9.1s-76SAUXFZexr9zJVcs8Dhl2rn3PuQPdWeR_Yh4v5o";
+token.value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI1ZTdiZmNiNGNiZWRjNjAzN2QxNGNjODQiLCJ1bm0iOiJCbGFja2lzbyIsImVtbCI6ImJsYWNrQGVtYWlsLmNvbSIsImlhdCI6MTU4NTE4NDIxMywiZXhwIjoxNTg1Nzg5MDEzfQ.PTHEXgaYu9PL2jspDIZorPDvKX3e5NGki0YHAZHsPxw";
 
 connect.addEventListener('click', () => {
 

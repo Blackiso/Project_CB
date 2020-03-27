@@ -17,7 +17,7 @@ export class Authentication {
 
 		try {
 			let token = req.jwt;
-			if (token == null) throw new Error();
+			if (token == null) throw new Err('Token not found!');
 			let payload = this.jwt.decode(token);
 			let user = await this.userDao.getUserById(payload.uid);
 			

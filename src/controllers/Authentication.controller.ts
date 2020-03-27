@@ -6,14 +6,13 @@ import { Logger } from '@overnightjs/logger';
 import { registerUserValidator, loginUserValidator } from '../util';
 import { Err, JWTResponse, UserResponse } from '../models';
 import { AuthenticationMiddleware } from '../middleware';
-import { SocketsHandler } from '../websocket/SocketsHandler';
 
 
 @injectable()
 @Controller('api/authentication')
 export class AuthenticationController {
 
-	constructor(private authService:AuthenticationService, private ws:SocketsHandler) {}
+	constructor(private authService:AuthenticationService) {}
 
 	@Post('register')
 	private async register(req:Request, res:Response) {
@@ -55,13 +54,4 @@ export class AuthenticationController {
 		return res.status(200).send(new UserResponse(req.user));
 	}
 
-
-	//For testing..
-	@Get('')
-	// @Middleware(AuthenticationMiddleware)
-	private get(req:Request, res:Response) { 
-		this.ws.sendToAll('test', 'wow!');
-		this.ws.sendToSocket('test', 'hi blackiso', 1582740607942);
-		return res.status(200).send();
-	}
 }
