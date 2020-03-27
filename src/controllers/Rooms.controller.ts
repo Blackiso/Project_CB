@@ -21,19 +21,11 @@ export class RoomsController {
 		try {
 
 			if (!roomCreateValidator(req.body)) throw new Err("Bad Request!");
-			let response = await this.roomsService.createRoom(req.user, req.body) as Room;
-			let roomResponse = new RoomResponse();
-			let user = {
-				user_id: req.user.user_id,
-				username: req.user.username
-			};
-			roomResponse.room_owner = user;
-			roomResponse.room_id = response.room_id;
-			roomResponse.room_privacy = response.room_privacy;
-			roomResponse.room_desc = response.room_desc;
-			roomResponse.room_mods = [];
 
-			return res.status(200).send(roomResponse);
+			let room = await this.roomsService.createRoom(req.user, req.body) as Room;
+			let response = new RoomResponse(room);
+			response.owner = req.user;
+			return res.status(200).send(response);
 
 		}catch(e) {
 			Logger.Err(e.error || e);
@@ -49,10 +41,10 @@ export class RoomsController {
 		try {
 
 			if (!joinRoomValidator(req.body)) throw new Err("Bad Request!");
-			let { user_id, username } = req.user;
-			let user =  <UserResponse> ModelMapper({ user_id, username }, new UserResponse());
-			await this.roomsService.joinRoom(user, req.body.room, req.body.sid);
-			Logger.Info(user.username+' joined '+req.body.room);
+
+			await this.roomsService.joinRoom(req.user, req.body.room, req.body.sid);
+			
+			Logger.Info(req.user.username+' joined '+req.body.room);
 			return res.status(200).send();
 
 		}catch(e) {

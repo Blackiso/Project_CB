@@ -7,7 +7,6 @@ import { RedisClient } from '../util/RedisClient';
 import { ModelMapper } from '../util';
 
 
-
 @injectable()
 export class RoomsService {
 	
@@ -21,88 +20,74 @@ export class RoomsService {
 
 	public async createRoom(user:User, data) {
 
-		try {
+		let room = new Room();
+		room.room_name = data.name;
+		room.room_privacy = data.privacy;
+		room.room_options = "option";
+		room.room_owner = user._id.toString();
 
-			let room = new Room();
-			room.room_id = data.name;
-			room.room_desc = data.desc || null;
-			room.room_privacy = data.privacy;
-			room.room_owner = user.user_id;
-
-			await this.roomDao.roomExist(room.room_id);
-			await this.roomDao.saveRoom(room);
-			await this.addRoomToUser(user.user_id, room.room_id);
-
-			return room;
-
-		}catch(e) {
-			throw new Err(e.error || 'Unable to create '+data.name);
+		if (await this.roomDao.roomExist(room.room_name)) {
+			throw new Err('Room already exists!');
 		}
+
+		return await this.roomDao.save(room);
 
 	}
 
-	public async joinRoom(user:UserResponse, room, sid) {
+	public async joinRoom(user:User, name, sid) {
 
 		try {
 
-			await this.roomDao.checkRoom(room);
-			await this.ws.addSocketToRoom(sid, room, user.user_id);
-			await this.addRoomToUser(user.user_id, room);
+			let room = await this.roomDao.roomExist(name) as Room;
+			if(!room) throw new Err('Room dosen\'t exists!');
+
+			await this.ws.addSocketToRoom(sid, name, user._id.toString());
+			this.addUserToRoom(user._id, room);
 
 			/// adding room to list of joined rooms for this socket
-			await this.redis.addStringToList(sid, room);
+			await this.redis.addStringToList(sid, name);
 			//////////////////////////////////////////////////////
 
-			let is_admin = await this.checkRoomAdmin(user.user_id, room);
-			user.is_admin = is_admin;
-			await this.redis.addHashKey(room, sid, user);
+			let { _id, username, user_image } = user;
+			await this.redis.addHashKey(name, sid, { _id, username, user_image });
 
-			this.ws.sendToRoom('INFO', user.username+' joined', room);
+			this.ws.sendToRoom('INFO', user.username+' joined', name);
 
-			let users = await this.getRoomOnlineUsers(room);
-			this.ws.sendToRoom('USERS', users, room);
+			let users = await this.getRoomOnlineUsers(name);
+			this.ws.sendToRoom('USERS', users, name);
 
 		}catch(e) {
-			throw new Err(e.error || 'Unable to join '+room);
+			throw new Err(e.error || 'Unable to join '+name);
 		}
 
 	}
 
 	public async getRoomDetails(room) {
 
-		let r = await this.roomDao.getById(room) as Room;
-		let user = await this.getRoomAdmin(room);
-		let roomResponse = new RoomResponse();
-
-		roomResponse.room_owner = user;
-		roomResponse.room_id = r.room_id;
-		roomResponse.room_privacy = r.room_privacy;
-		roomResponse.room_desc = r.room_desc;
-		roomResponse.room_mods = [];
-		return roomResponse;
-
 	}
 
-	public async addRoomToUser(user_id, room) {
-		if (!(await this.usersRoomsDao.check(user_id, room))) {
-			await this.usersRoomsDao.save(user_id, room);
+	public async addUserToRoom(_id, room:Room | any) {
+		if (room.room_banned.includes(_id)) throw new Err('User is banned!', 401);
+		
+		if (!room.room_users.includes(_id)) {
+			room.room_users.push(_id);
 		}
+		await room.save();
 	}
 
-	public async checkRoomAdmin(uid, room):Promise<boolean> {
-		let id = await this.roomDao.getRoomAdmin(room);
-		return id == uid;
+	public checkRoomAdmin(uid, room:Room):boolean {
+		return room.room_owner == uid;
 	}
 
 	public async getRoomAdmin(room) {
 		let adminId = await this.roomDao.getRoomAdmin(room);
-		let { user_id, username } = await this.usersDao.getUserById(adminId) as User;
-		return { user_id, username };		
+		let { _id, username } = await this.usersDao.getUserById(adminId) as User;
+		return { _id, username };		
 	}
 
-	public async getRoomOnlineUsers(room) {
+	public async getRoomOnlineUsers(room_name) {
 
-		let data = await this.redis.getHash(room);
+		let data = await this.redis.getHash(room_name);
 		let users = [] as Array<object>;
 
 		for (let key in data) {
@@ -125,8 +110,8 @@ export class RoomsService {
 			}).catch(Logger.Err);
 	}
 
-	public async getJoinedRooms(user_id) {
-		let rooms = await this.roomDao.listUserRooms(user_id) as Array<Room>;
+	public async getJoinedRooms(_id) {
+		let rooms = await this.roomDao.listUserRooms(_id) as Array<Room>;
 		let users = [] as Array<number>;
 
 		rooms.forEach(r => {
@@ -138,7 +123,7 @@ export class RoomsService {
 		let admins = await this.usersDao.getUsersById(users);
 		admins.forEach(admin => {
 			for (let i = 0; i < rooms.length; i++) {
-				if (admin.user_id == rooms[i].room_owner) {
+				if (admin._id == rooms[i].room_owner) {
 					rooms[i].room_owner = admin;
 				}
 			}
