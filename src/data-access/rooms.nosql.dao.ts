@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Schema, ObjectId } from 'mongoose';
+import { Schema, ObjectId, Model } from 'mongoose';
 import { injectable } from "tsyringe";
 import { User, Err, Room } from '../models';
 import { Logger } from '@overnightjs/logger';
@@ -14,12 +14,26 @@ export class RoomsDao {
 	constructor() {
 		this.roomsSchema = new Schema({
 			room_name: String,
-			room_owner: ObjectId,
-			room_privacy: String,
-			room_options: String,
+			room_owner: {
+				_id: ObjectId,
+				username: String,
+				user_image: String
+			},
+			room_options: {
+				privacy: String,
+				language_filter: Boolean,
+				allow_invites: Boolean
+			},
 			room_mods: [ObjectId],
 			room_users: [ObjectId],
-			room_banned: [ObjectId]
+			room_banned: [ObjectId],
+			invited_users: [
+				{
+					_id: [ObjectId],
+					username: String,
+					invited_by: String
+				}
+			]
 		});
 
 		this.RoomModel = this.getRoomModel();
@@ -29,7 +43,6 @@ export class RoomsDao {
 		let _room = new this.RoomModel({
 			room_name: room.room_name,
 			room_owner: room.room_owner,
-			room_privacy: room.room_privacy,
 			room_options: room.room_options
 		});
 
@@ -56,6 +69,13 @@ export class RoomsDao {
 
 	private getRoomModel() {
 		return mongoose.model('Room', this.roomsSchema);
+	}
+
+	public async addUserToRoom(_id, room:Model | Room) {
+		if (!room.room_users.includes(_id)) {
+			room.room_users.push(_id);
+		}
+		await room.save();
 	}
 
 }

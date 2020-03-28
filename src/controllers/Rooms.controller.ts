@@ -24,7 +24,6 @@ export class RoomsController {
 
 			let room = await this.roomsService.createRoom(req.user, req.body) as Room;
 			let response = new RoomResponse(room);
-			response.owner = req.user;
 			return res.status(200).send(response);
 
 		}catch(e) {
@@ -42,10 +41,10 @@ export class RoomsController {
 
 			if (!joinRoomValidator(req.body)) throw new Err("Bad Request!");
 
-			await this.roomsService.joinRoom(req.user, req.body.room, req.body.sid);
+			let response = await this.roomsService.joinRoom(req.user, req.body.room, req.body.sid);
 			
 			Logger.Info(req.user.username+' joined '+req.body.room);
-			return res.status(200).send();
+			return res.status(200).send(response);
 
 		}catch(e) {
 			Logger.Err(e.error || e);

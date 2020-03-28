@@ -7,6 +7,8 @@ import useragent from 'express-useragent';
 import { JwtMiddleware } from './middleware';
 import { MongoDb } from './util';
 
+//dev only
+import cors from 'cors';
 
 export class ApiServer extends Server {
 
@@ -14,6 +16,8 @@ export class ApiServer extends Server {
         super();
 
         let db = new MongoDb();
+
+        this.app.use(cors());
 
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({extended: true}));

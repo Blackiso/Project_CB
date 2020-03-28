@@ -7,6 +7,19 @@ function insertLog(type, msg) {
 	container.prepend(span);
 }
 
+function ajax(metod, link, body, call, token) {
+	var json = json;
+	var http = new XMLHttpRequest();
+	http.open(metod, link);
+	http.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+	http.setRequestHeader('Authorization', 'Bearer ' + token);
+	http.send(JSON.stringify(body));
+	http.onload = () => {
+		var data = JSON.parse(http.responseText);
+		call(data);
+	}
+}
+
 var mySocket;
 var connect = document.querySelector('#connect');
 var disconnect = document.querySelector('#disconnect');
@@ -17,6 +30,7 @@ var room = document.querySelector('#room');
 var join = document.querySelector('#join');
 
 token.value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI1ZTdiZmNiNGNiZWRjNjAzN2QxNGNjODQiLCJ1bm0iOiJCbGFja2lzbyIsImVtbCI6ImJsYWNrQGVtYWlsLmNvbSIsImlhdCI6MTU4NTE4NDIxMywiZXhwIjoxNTg1Nzg5MDEzfQ.PTHEXgaYu9PL2jspDIZorPDvKX3e5NGki0YHAZHsPxw";
+room.value = "Black_room";
 
 connect.addEventListener('click', () => {
 
@@ -53,6 +67,16 @@ connect.addEventListener('click', () => {
 	send.addEventListener('click', () => {
 		mySocket.emit('MESG', msg.value);
 		insertLog('MESG', 'Message Sent '+msg.value);
+	});
+
+	join.addEventListener('click', () => {
+		insertLog('INFO', 'Joining '+room.value+'...');
+		ajax('POST', 'http://127.0.0.1/api/rooms/join', {
+			room: room.value,
+			sid: mySocket.id
+		}, (data) => {
+			console.log(data);
+		}, token.value);
 	});
 
 });
