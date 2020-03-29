@@ -33,7 +33,8 @@ export class RoomsDao {
 					username: String,
 					invited_by: String
 				}
-			]
+			],
+			online_users: Number
 		});
 
 		this.RoomModel = this.getRoomModel();
@@ -43,7 +44,8 @@ export class RoomsDao {
 		let _room = new this.RoomModel({
 			room_name: room.room_name,
 			room_owner: room.room_owner,
-			room_options: room.room_options
+			room_options: room.room_options,
+			online_users: room.online_users
 		});
 
 		return await _room.save();
@@ -71,11 +73,16 @@ export class RoomsDao {
 		return mongoose.model('Room', this.roomsSchema);
 	}
 
-	public async addUserToRoom(_id, room:Model | Room) {
+	public async addUserToRoom(_id, room:Model | Room, inc?) {
 		if (!room.room_users.includes(_id)) {
 			room.room_users.push(_id);
 		}
+		if(inc) room.online_users++;
 		await room.save();
+	}
+
+	public async decreaseOnlineUsersCount(rooms_name:Array<string>) {
+		await this.RoomModel.updateMany({ room_name: { $in: rooms_name } } ,  { $inc: { online_users: -1 } });
 	}
 
 }

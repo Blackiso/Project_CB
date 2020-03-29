@@ -16,5 +16,6 @@ export class Room {
  	room_users:Array<string>;
  	room_banned:Array<string>;
  	invited_users:Array<object>;
+ 	online_users:number;
 
 }

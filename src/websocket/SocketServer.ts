@@ -5,7 +5,7 @@ import { Logger } from '@overnightjs/logger';
 import { Dispatcher } from './Dispatcher';
 import { AuthenticationWSMiddleware, eventWildCard, socketId } from '../middleware';
 import { SocketsHandler } from './SocketsHandler';
-// import { RoomsService } from '../services/Rooms.service';
+import { RoomsService } from '../services/Rooms.service';
  
 //Main socket that accepts new sockets
 
@@ -17,7 +17,7 @@ export class SocketServer {
 	private io:any;
 	private port:number;
 
-	constructor(private dispatcher:Dispatcher, private socketsHandler:SocketsHandler) {}
+	constructor(private dispatcher:Dispatcher, private socketsHandler:SocketsHandler, private roomsService:RoomsService) {}
 
 	init(server) {
 		this.io = io(server);
@@ -41,9 +41,11 @@ export class SocketServer {
 	}
 
 	disconnected(socket:SocketIO.Socket | any) {
-		Logger.Info(socket.user.username+" disconnected");
-		this.socketsHandler.removeSocket(socket);
-		// this.roomsService.removeUserFromRoom(socket.id, socket.user);
+		this.roomsService.userDisconnected(socket.id, socket.user)
+			.then(x => {
+				Logger.Info(socket.user.username+"["+socket.id+"] disconnected");
+				this.socketsHandler.removeSocket(socket);
+			}).catch(Logger.Err);
 	}
 
 }

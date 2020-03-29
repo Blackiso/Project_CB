@@ -65,8 +65,24 @@ export class RedisClient {
 		return hgetall(hash);
 	}
 
-	deleteHash() {
+	addSet(key, value) {
+		let sadd = promisify(this.client.sadd).bind(this.client);
+		return sadd(key, value);
+	}
 
+	removeSet(key, value) {
+		let srem = promisify(this.client.srem).bind(this.client);
+		return srem(key, value);
+	}
+
+	getSet(key) {
+		let smembers = promisify(this.client.smembers).bind(this.client);
+		return smembers(key);
+	}
+
+	checkSetValue(key, value) {
+		let sismember = promisify(this.client.sismember).bind(this.client);
+		return sismember(key, value);
 	}
 
 }
