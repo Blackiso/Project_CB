@@ -23,6 +23,7 @@ export class UsersDetailsDao {
 			user_friends: [ObjectId],
 			joined_rooms: [ObjectId]
 		});
+		this.usersSchema.index({ username: 1 }, { collation: { locale: 'en', strength: 2 } });
 		this.UserModel = this.getUserModel();
 	}	
 
@@ -41,6 +42,11 @@ export class UsersDetailsDao {
 
 	public async getUserByEmail(email:string):Promise<User> {
 		let user = await this.UserModel.findOne({ user_email: email });
+		return user;
+	}
+
+	public async getUserByUsername(username:string):Promise<User> {
+		let user = await this.UserModel.findOne({ username: username }).collation( { locale: 'en', strength: 2 } );
 		return user;
 	}
 

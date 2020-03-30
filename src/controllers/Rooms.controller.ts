@@ -42,8 +42,6 @@ export class RoomsController {
 			if (!joinRoomValidator(req.body)) throw new Err("Bad Request!");
 
 			let response = await this.roomsService.joinRoom(req.user, req.body.room, req.body.sid);
-			
-			Logger.Info(req.user.username+' joined '+req.body.room);
 			return res.status(200).send(response);
 
 		}catch(e) {

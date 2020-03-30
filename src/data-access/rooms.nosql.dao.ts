@@ -36,7 +36,7 @@ export class RoomsDao {
 			],
 			online_users: Number
 		});
-
+		this.roomsSchema.index({ room_name: 1 }, { collation: { locale: 'en', strength: 2 } });
 		this.RoomModel = this.getRoomModel();
 	}
 
@@ -56,7 +56,7 @@ export class RoomsDao {
 	}
 
 	public async roomExist(name):Promise<boolean | Room> {
-		let room = await this.RoomModel.findOne({ room_name: name });
+		let room = await this.RoomModel.findOne({ room_name: name }).collation( { locale: 'en', strength: 2 } );
 		if (!room) return false;
 		return room;
 	}

@@ -33,7 +33,7 @@ export class AuthenticationService {
 
 	public async loginUser(data:any):Promise<string> {
 
-		let user = await this.userDao.getUserByEmail(data.email);
+		let user = await this.userDao.getUserByUsername(data.username);
 		if (!user) throw new Err("User not found!", 401);
 
 		if (!checkPasswordHash(data.password, user.user_password)) {

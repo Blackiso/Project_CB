@@ -12,7 +12,7 @@ export let registerUserValidator = (obj):boolean => {
 };
 
 export let loginUserValidator = (obj):boolean => {
-	let mustHave = ['email', 'password'];
+	let mustHave = ['username', 'password'];
 	return objHasPropertys(obj, mustHave);
 };
 

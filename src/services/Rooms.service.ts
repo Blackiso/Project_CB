@@ -13,7 +13,7 @@ export class RoomsService {
 	constructor(
 		private roomDao:RoomsDao,  
 		private ws:SocketsHandler, 
-		private redis:RedisClient,
+		private redis:RedisClient
 	) {}
 
 	public async createRoom(user:User, data) {
@@ -43,7 +43,7 @@ export class RoomsService {
 
 			let room = await this.roomDao.roomExist(room_name) as Room;
 
-			if(!room) throw new Err('Room dosen\'t exist!');
+			if (!room) throw new Err('Room dosen\'t exist!');
 			if (room.room_options.privacy == 'private' && !room.room_users.includes(user._id) && room.room_owner._id.toString() !== user._id.toString()) {
 				throw new Error();
 			}
@@ -52,9 +52,11 @@ export class RoomsService {
 			await this.addUserToRoom(user, room, sid);
 			await this.addRoomToUser(user, room);
 			
-			this.ws.sendToRoom('INFO', user.username+' joined', room_name);
+			this.ws.sendToRoom('INFO', user.username+' joined', room.room_name);
 
-			this.sendOnlineUsers(room_name);
+			this.sendOnlineUsers(room.room_name);
+
+			Logger.Info(user.username+' joined '+room.room_name);
 
 			if (room.room_owner._id.toString() == user._id.toString()) return new OwnedRoomResponse(room);
 			return new RoomResponse(room);
@@ -86,6 +88,7 @@ export class RoomsService {
 			for (let x = 0; x < userSockets.length; x++) {
 				if (await this.redis.checkSetValue('sockets-'+room, userSockets[x]) == 1 && userSockets !== sid) {
 					is_other = true;
+					break;
 				}
 			}
 

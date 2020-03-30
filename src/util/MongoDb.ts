@@ -13,6 +13,7 @@ export class MongoDb {
 
 	createConnection() {
 		mongoose.connect(this.url, {useNewUrlParser: true, useUnifiedTopology: true});
+		mongoose.set('useCreateIndex', true);
 		this.db = mongoose.connection;
 
 		//Add reconecting on error
