@@ -1,4 +1,4 @@
-import { injectable } from "tsyringe";
+/*import { injectable } from "tsyringe";
 import { Database, ModelMapper } from '../util';
 import { User, Err, Room } from '../models';
 import { Logger } from '@overnightjs/logger';
@@ -34,3 +34,4 @@ export class UsersRoomsDao {
 	}
 
 }
+*/

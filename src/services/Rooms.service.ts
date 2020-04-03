@@ -83,16 +83,16 @@ export class RoomsService {
 
 		if (userSockets.length > 1) {
 			
-			let is_other = false;
+			let multipleSockets = false;
 
 			for (let x = 0; x < userSockets.length; x++) {
 				if (await this.redis.checkSetValue('sockets-'+room, userSockets[x]) == 1 && userSockets !== sid) {
-					is_other = true;
+					multipleSockets = true;
 					break;
 				}
 			}
 
-			if (is_other) {
+			if (multipleSockets) {
 				await this.redis.removeSet('sockets-'+room, sid);
 				// await this.ws.removeSocketFromRoom(sid, room, user._id.toString());
 				return;

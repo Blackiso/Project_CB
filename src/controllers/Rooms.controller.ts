@@ -51,7 +51,7 @@ export class RoomsController {
 		
 	}
 
-	@Get('details/:id')
+	/*@Get('details/:id')
 	@Middleware(AuthenticationMiddleware)
 	public async roomDetails(req:Request | any, res:Response) {
 
@@ -81,6 +81,6 @@ export class RoomsController {
 			return res.status(e.code || 400).send(e);
 		}
 
-	}
+	}*/
 
 }

@@ -11,17 +11,17 @@ export class Authentication {
 	private error:string = "Unautorized request!";
 	private errorno:number = 401;
 
-	constructor(private userDao:UsersDetailsDao, private jwt:JWT) {}
+	constructor(private userDao:UsersDetailsDao) {}
 
 	public async authenticate(req:any, res:any, next:any) {
 
 		try {
-			let token = req.jwt;
+			let token = req.jwt as JWT;
 			if (token == null) throw new Err('Token not found!');
-			let payload = this.jwt.decode(token);
+			let payload = token.getPayload();
 			let user = await this.userDao.getUserById(payload.uid);
 			
-			if (!this.jwt.verify(token, user)) {
+			if (!token.verify(user)) {
 				Logger.Err("Invalid token!");
 			}else {
 				req.user = user;
@@ -40,11 +40,11 @@ export class Authentication {
 
 			if (socket.handshake.query && socket.handshake.query.token) {
 				Logger.Info('Token found => '+ socket.handshake.query.token);
-				let token = socket.handshake.query.token;
-				let payload = this.jwt.decode(token);
+				let token = new JWT(socket.handshake.query.token);
+				let payload = token.getPayload();
 				let user = await this.userDao.getUserById(payload.uid);
 				
-				if (!this.jwt.verify(token, user)) {
+				if (!token.verify(user)) {
 					Logger.Err('Invalid token!');
 					throw new Err('Invalid token!');
 				}else {

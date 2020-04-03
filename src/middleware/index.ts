@@ -2,6 +2,8 @@ import { container } from "tsyringe";
 import { Authentication } from './Authentication';
 import { Logger } from '@overnightjs/logger';
 import { EventEmitter } from 'events';
+import { JWT } from '../util';
+
 
 export let AuthenticationMiddleware = (req:any, res:any, next:any) => {
 	let auth =  container.resolve(Authentication);
@@ -15,7 +17,7 @@ export let AuthenticationWSMiddleware = (socket, next:any) => {
 
 export let JwtMiddleware = (req:any, res:any, next:any) => {
 	if (req.headers.authorization) {
-		req.jwt = req.headers.authorization.replace('Bearer ', '');
+		req.jwt = new JWT(req.headers.authorization.replace('Bearer ', ''));
 	}else {
 		Logger.Warn("Token not found!");
 		req.jwt = null;

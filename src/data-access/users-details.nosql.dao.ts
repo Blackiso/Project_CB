@@ -20,8 +20,7 @@ export class UsersDetailsDao {
 			user_key: String,
 			user_password: String,
 			register_date: Date,
-			user_friends: [ObjectId],
-			joined_rooms: [ObjectId]
+			user_friends: [ObjectId]
 		});
 		this.usersSchema.index({ username: 1 }, { collation: { locale: 'en', strength: 2 } });
 		this.UserModel = this.getUserModel();
@@ -46,7 +45,7 @@ export class UsersDetailsDao {
 	}
 
 	public async getUserByUsername(username:string):Promise<User> {
-		let user = await this.UserModel.findOne({ username: username }).collation( { locale: 'en', strength: 2 } );
+		let user = await this.UserModel.findOne({ username: username }).collation({ locale: 'en', strength: 2 });
 		return user;
 	}
 
@@ -55,7 +54,7 @@ export class UsersDetailsDao {
 		return user;
 	}
 
-	public getUsersById(ids:Array<number>):Promise<any> {
+	public getUsersById(ids:Array<number>):Promise<any> | null {
 		return null;
 	}
 
