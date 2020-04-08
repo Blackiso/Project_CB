@@ -51,14 +51,14 @@ export class RoomsController {
 		
 	}
 
-	/*@Get('details/:id')
+	@Get('list')
 	@Middleware(AuthenticationMiddleware)
-	public async roomDetails(req:Request | any, res:Response) {
+	public async joinedRooms(req:Request | any, res:Response) {
 
 		try {
 
-			let room = await this.roomsService.getRoomDetails(req.params.id);
-			return res.status(200).send(room);
+			let response = await this.roomsService.listRooms(req.user, req.query.type);
+			return res.status(200).send(response);
 
 		}catch(e) {
 			Logger.Err(e.error || e);
@@ -66,21 +66,5 @@ export class RoomsController {
 		}
 
 	}
-
-	@Get('joined')
-	@Middleware(AuthenticationMiddleware)
-	public async listJoinedRooms(req:Request | any, res:Response) {
-
-		try {
-
-			let rooms = await this.roomsService.getJoinedRooms(req.user.user_id);
-			return res.status(200).send(rooms);
-
-		}catch(e) {
-			Logger.Err(e.error || e);
-			return res.status(e.code || 400).send(e);
-		}
-
-	}*/
 
 }

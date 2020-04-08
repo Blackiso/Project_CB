@@ -1,6 +1,6 @@
 import { Logger } from '@overnightjs/logger';
 import { injectable, singleton } from "tsyringe";
-import { User, Err, Room, UserResponse, RoomResponse, OwnedRoomResponse } from '../models';
+import { User, Err, Room, UserResponse, RoomResponse, RoomDetails, RoomDetailsAdv } from '../models';
 import { SocketsHandler } from '../websocket/SocketsHandler';
 import { RoomsDao } from '../data-access';
 import { RedisClient } from '../util/RedisClient';
@@ -58,14 +58,32 @@ export class RoomsService {
 
 			Logger.Info(user.username+' joined '+room.room_name);
 
-			if (room.room_owner._id.toString() == user._id.toString()) return new OwnedRoomResponse(room);
-			return new RoomResponse(room);
+			if (room.room_owner._id.toString() == user._id.toString()) return new RoomDetailsAdv(room);
+			return new RoomDetails(room);
 
 		}catch(e) {
 			console.log(e);
 			throw new Err(e.error || 'Unable to join '+room_name);
 		}
 
+	}
+
+	public async listRooms(user:User, type) {
+		let rooms;
+		switch (type) {
+			case "owned":
+				rooms  = await this.roomDao.getByAdminId(user._id) as Array<Room>;
+				break;
+			case "public":
+				rooms  = await this.roomDao.getAll() as Array<Room>;
+				break;
+			default:
+				rooms  = await this.roomDao.getByUserId(user._id) as Array<Room>;
+				break;
+		}
+
+		let roomsResponses = rooms.map(room => new RoomResponse(room));
+		return roomsResponses;
 	}
 
 	public async userDisconnected(sid, user:User) {
@@ -94,7 +112,7 @@ export class RoomsService {
 
 			if (multipleSockets) {
 				await this.redis.removeSet('sockets-'+room, sid);
-				// await this.ws.removeSocketFromRoom(sid, room, user._id.toString());
+				this.ws.removeSocketFromRoom(sid, room, user._id.toString());
 				return;
 			}
 		}
@@ -136,7 +154,7 @@ export class RoomsService {
 	}
 
 	private async removeUserFromRoom(user:User, room, sid) {
-		// await this.ws.removeSocketFromRoom(sid, room, user._id.toString());
+		this.ws.removeSocketFromRoom(sid, room, user._id.toString());
 		await this.redis.deleteHasKey('users-'+room, user._id.toString());
 		await this.redis.removeSet('sockets-'+room, sid);
 		await this.roomDao.decreaseOnlineUsersCount([room]);

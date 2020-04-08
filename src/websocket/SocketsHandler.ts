@@ -52,12 +52,9 @@ export class SocketsHandler {
 	}
 
 	removeSocketFromRoom(sid, room, uid) {
-		return new Promise((resolve, reject) => {
-			this.checkSocketById(sid, uid).then(() => {
-				this._mainSocket.of('/').connected[sid].leave(room);
-				resolve();
-			}).catch(reject);
-		});
+		this.checkSocketById(sid, uid).then(() => {
+			this._mainSocket.of('/').connected[sid].leave(room);
+		}).catch(Logger.Err);
 	}
 
 	checkSocketById(sid, uid) {

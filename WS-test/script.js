@@ -29,7 +29,7 @@ var token = document.querySelector('#token');
 var room = document.querySelector('#room');
 var join = document.querySelector('#join');
 
-token.value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI1ZTdiZmNiNGNiZWRjNjAzN2QxNGNjODQiLCJ1bm0iOiJCbGFja2lzbyIsImVtbCI6ImJsYWNrQGVtYWlsLmNvbSIsImlhdCI6MTU4NTE4NDIxMywiZXhwIjoxNTg1Nzg5MDEzfQ.PTHEXgaYu9PL2jspDIZorPDvKX3e5NGki0YHAZHsPxw";
+token.value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI1ZTdiZmNiNGNiZWRjNjAzN2QxNGNjODQiLCJ1bm0iOiJCbGFja2lzbyIsImVtbCI6ImJsYWNrQGVtYWlsLmNvbSIsImlhdCI6MTU4NjI5NTg1MiwiZXhwIjoxNTg2OTAwNjUyfQ.LKXYZq0HZUtLjfkztW88v2J0IS__Ffrpa-rXPY9djHg";
 room.value = "Black_room";
 
 var mySocket;

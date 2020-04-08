@@ -55,6 +55,18 @@ export class RoomsDao {
 		return null;
 	}
 
+	public async getByUserId(id):Promise<Array<Room>> {
+		return this.RoomModel.find({ room_users: id }).sort({ online_users: -1 }).limit(10);
+	}
+
+	public async getByAdminId(id):Promise<Array<Room>> {
+		return this.RoomModel.find({ 'room_owner._id': id }).sort({ online_users: -1 }).limit(10);
+	}
+
+	public async getAll():Promise<Array<Room>> {
+		return this.RoomModel.find({ 'room_options.privacy': 'public' }).sort({ online_users: -1 }).limit(10);
+	}
+
 	public async roomExist(name):Promise<boolean | Room> {
 		let room = await this.RoomModel.findOne({ room_name: name }).collation( { locale: 'en', strength: 2 } );
 		if (!room) return false;
