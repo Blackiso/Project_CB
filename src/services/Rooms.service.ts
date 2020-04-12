@@ -45,7 +45,7 @@ export class RoomsService {
 
 			if (!room) throw new Err('Room dosen\'t exist!');
 			if (room.room_options.privacy == 'private' && !room.room_users.includes(user._id) && room.room_owner._id.toString() !== user._id.toString()) {
-				throw new Error();
+				throw new Error('Private room!');
 			}
 			if (room.room_banned.includes(user._id)) throw new Err('User is banned!', 401);
 
@@ -128,20 +128,8 @@ export class RoomsService {
 	}
 
 	public async sendOnlineUsers(room_name) {
-		let users = await this.getRoomOnlineUsers(room_name);
+		let users = await this.roomDao.getOnlineUsers(room_name);
 		this.ws.sendToRoom('USERS', users, room_name);
-	}
-
-	public async getRoomOnlineUsers(room_name) {
-
-		let data = await this.redis.getHash(room_name);
-		let users = [] as Array<object>;
-
-		for (let key in data) {
-			users.push(JSON.parse(data[key]));
-		}
-		return users;
-
 	}
 
 	private async addUserToRoom(user:User, room:Room, sid) {

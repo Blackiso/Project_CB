@@ -33,6 +33,11 @@ export let joinRoomValidator = (obj):boolean => {
 	return check;
 }
 
+export let messageValidator = (obj):boolean => {
+	let mustHave = ['msg'];
+	return objHasPropertys(obj, mustHave);
+}
+
 export let emailValidator = (email:string):boolean => {
 	return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email);
 };
@@ -44,3 +49,4 @@ export let passwordValidator = (password:string):boolean => {
 export let nameValidator = (name:string):boolean => {
 	return /^[a-zA-Z0-9_-]{3,15}$/.test(name);
 }
+

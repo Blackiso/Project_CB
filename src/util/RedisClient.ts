@@ -70,6 +70,11 @@ export class RedisClient {
 		return sadd(key, value);
 	}
 
+	addExpireSet(key, value, ttl) {
+		let setex = promisify(this.client.setex).bind(this.client);
+		return setex(key, ttl, value);
+	}
+
 	removeSet(key, value) {
 		let srem = promisify(this.client.srem).bind(this.client);
 		return srem(key, value);
@@ -78,6 +83,12 @@ export class RedisClient {
 	getSet(key) {
 		let smembers = promisify(this.client.smembers).bind(this.client);
 		return smembers(key);
+	}
+
+	getMultipleSets(keys) {
+		let mget = promisify(this.client.mget).bind(this.client);
+		console.log(keys);
+		return mget(...keys);
 	}
 
 	checkSetValue(key, value) {

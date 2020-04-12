@@ -28,6 +28,7 @@ var msg = document.querySelector('#msg');
 var token = document.querySelector('#token');
 var room = document.querySelector('#room');
 var join = document.querySelector('#join');
+var roomId;
 
 token.value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI1ZTdiZmNiNGNiZWRjNjAzN2QxNGNjODQiLCJ1bm0iOiJCbGFja2lzbyIsImVtbCI6ImJsYWNrQGVtYWlsLmNvbSIsImlhdCI6MTU4NjI5NTg1MiwiZXhwIjoxNTg2OTAwNjUyfQ.LKXYZq0HZUtLjfkztW88v2J0IS__Ffrpa-rXPY9djHg";
 room.value = "Black_room";
@@ -46,7 +47,8 @@ connect.addEventListener('click', () => {
 	});
 
 	mySocket.on('MESG', (data) => {
-		insertLog('MESG', data);
+		let msg = JSON.parse(data);
+		insertLog('MESG', msg.user.username+': '+msg.msg);
 	});
 
 	mySocket.on('INFO', (data) => {
@@ -69,8 +71,9 @@ disconnect.addEventListener('click', () => {
 });
 
 send.addEventListener('click', () => {
-	mySocket.emit('MESG', msg.value);
-	insertLog('MESG', 'Message Sent '+msg.value);
+	ajax('POST', 'http://127.0.0.1/api/room/'+roomId+'/messages', { msg: msg.value }, () => {
+		console.log('!');
+	}, token.value);
 });
 
 join.addEventListener('click', () => {
@@ -80,5 +83,6 @@ join.addEventListener('click', () => {
 		sid: mySocket.id
 	}, (data) => {
 		console.log(data);
+		roomId = data._id;
 	}, token.value);
 });

@@ -1,17 +1,19 @@
 import mongoose from 'mongoose';
 import { Schema, ObjectId, Model } from 'mongoose';
-import { injectable } from "tsyringe";
+import { injectable, singleton } from "tsyringe";
 import { User, Err, Room } from '../models';
 import { Logger } from '@overnightjs/logger';
+import { RedisClient } from '../util/RedisClient';
 
 
 @injectable()
+@singleton()
 export class RoomsDao {
 
 	private roomsSchema;
 	private RoomModel;
 
-	constructor() {
+	constructor(private redis:RedisClient) {
 		this.roomsSchema = new Schema({
 			room_name: String,
 			room_owner: {
@@ -51,8 +53,12 @@ export class RoomsDao {
 		return await _room.save();
 	}
 
-	public async getByName(name):Promise<Room | null> {
-		return null;
+	public async getByName(name):Promise<Room> {
+		return await this.RoomModel.findOne({ room_name: name }).collation( { locale: 'en', strength: 2 } );
+	}
+
+	public async getById(id):Promise<Room> {
+		return await this.RoomModel.findOne({ _id: id });
 	}
 
 	public async getByUserId(id):Promise<Array<Room>> {
@@ -79,6 +85,16 @@ export class RoomsDao {
 
 	public async listRoomUsers(room):Promise<Array<string> | null> {
 		return null;
+	}
+
+	public async getOnlineUsers(name):Promise<Array<any>> {
+		let data = await this.redis.getHash('users-'+name);
+		let users = [] as Array<object>;
+
+		for (let key in data) {
+			users.push(JSON.parse(data[key]));
+		}
+		return users;
 	}
 
 	private getRoomModel() {

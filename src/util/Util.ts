@@ -1,5 +1,7 @@
 import bcrypt  from 'bcrypt';
 import { Err } from '../models';
+import crypto  from 'crypto';
+
 
 export let objHasPropertys = (obj, props:Array<string>) => {
 	let check = false;
@@ -26,6 +28,11 @@ export let generateKey = ():string => {
 
 export let checkPasswordHash = (str:string, hash:string):boolean => {
 	return bcrypt.compareSync(str, hash);
+}
+
+export let generate24Bit = () => {
+	let hash = crypto.randomBytes(12);
+	return hash.toString('hex');
 }
 
 export let ModelMapper = (data:any, object:object) => {
