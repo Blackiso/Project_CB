@@ -1,4 +1,4 @@
-import { Room } from './';
+import { Room } from '../persistence/Room';
 
 export class RoomResponse {
  	

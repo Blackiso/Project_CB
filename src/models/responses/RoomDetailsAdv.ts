@@ -1,4 +1,4 @@
-import { Room } from './Room';
+import { Room } from '../persistence/Room';
 
 export class RoomDetailsAdv {
  	

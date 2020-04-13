@@ -1,4 +1,4 @@
-import { User } from '../models';
+import { User } from '../persistence/User';
 
 export class UserResponse {
  	

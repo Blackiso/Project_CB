@@ -1,6 +1,6 @@
 import { Logger } from '@overnightjs/logger';
 import { injectable, singleton } from "tsyringe";
-import { User, Err, Room, UserResponse, RoomResponse, RoomDetails, RoomDetailsAdv } from '../models';
+import { User, Err, Room, RoomUser, RoomResponse, RoomDetails, RoomDetailsAdv } from '../models';
 import { SocketsHandler } from '../websocket/SocketsHandler';
 import { RoomsDao } from '../data-access';
 import { RedisClient } from '../util/RedisClient';
@@ -50,7 +50,6 @@ export class RoomsService {
 			if (room.room_banned.includes(user._id)) throw new Err('User is banned!', 401);
 
 			await this.addUserToRoom(user, room, sid);
-			await this.addRoomToUser(user, room);
 			
 			this.ws.sendToRoom('INFO', user.username+' joined', room.room_name);
 
@@ -89,11 +88,14 @@ export class RoomsService {
 	public async userDisconnected(sid, user:User) {
 
 		let userSockets = await this.redis.getAllList('sockets-'+user._id);
-		let rooms = await this.redis.getSet('rooms-'+user._id);
+		let rooms = await this.roomDao.getUserRooms(user);
+		let dec = true;
 
 		for (let i = 0; i < rooms.length; i++) {
-			await this.leaveRoom(userSockets, sid, user, rooms[i]);
+			dec = await this.leaveRoom(userSockets, sid, user, rooms[i]);
 		}
+
+		if (dec) await this.roomDao.decreaseOnlineUsersCount(rooms);
 
 	}
 
@@ -104,22 +106,22 @@ export class RoomsService {
 			let multipleSockets = false;
 
 			for (let x = 0; x < userSockets.length; x++) {
-				if (await this.redis.checkSetValue('sockets-'+room, userSockets[x]) == 1 && userSockets !== sid) {
+				if (await this.roomDao.socketInRoom(room, userSockets[x]) && userSockets !== sid) {
 					multipleSockets = true;
 					break;
 				}
 			}
 
 			if (multipleSockets) {
-				await this.redis.removeSet('sockets-'+room, sid);
+				await this.roomDao.removeSocketFromRoom(room, sid);
 				this.ws.removeSocketFromRoom(sid, room, user._id.toString());
-				return;
+				return false;
 			}
 		}
 
 		await this.removeUserFromRoom(user, room, sid);
 		await this.ws.sendToRoom('INFO', user.username+' left the room', room);
-		await this.removeRoomFromUser(user, room);
+		return true;
 
 	}
 
@@ -133,27 +135,22 @@ export class RoomsService {
 	}
 
 	private async addUserToRoom(user:User, room:Room, sid) {
-		let inc = !(await this.redis.checkSetValue('rooms-'+user._id.toString(), room.room_name) == 1);
-		let { _id, username, user_image } = user;
+		
+		let inc = !await this.roomDao.userInRoom(user, room);
+		let roomUser = new RoomUser(user);
+
+		roomUser.is_admin = user._id.toString() == room.room_owner._id.toString();
+		roomUser.is_mod = room.room_mods.includes(user._id);
+
 		await this.ws.addSocketToRoom(sid, room.room_name, user._id.toString());
-		await this.redis.addHashKey('users-'+room.room_name, user._id.toString(), { _id, username, user_image });
-		await this.redis.addSet('sockets-'+room.room_name, sid);
-		await this.roomDao.addUserToRoom(user._id, room, inc);
+		await this.roomDao.addUserToRoom(roomUser, room, sid, inc);
+
 	}
 
 	private async removeUserFromRoom(user:User, room, sid) {
 		this.ws.removeSocketFromRoom(sid, room, user._id.toString());
-		await this.redis.deleteHasKey('users-'+room, user._id.toString());
-		await this.redis.removeSet('sockets-'+room, sid);
-		await this.roomDao.decreaseOnlineUsersCount([room]);
-	}
-
-	private async addRoomToUser(user:User, room:Room) {
-		await this.redis.addSet('rooms-'+user._id, room.room_name);
-	}
-
-	private async removeRoomFromUser(user:User, room) {
-		await this.redis.removeSet('rooms-'+user._id, room);
+		await this.roomDao.removeUserFromRoom(user, room, sid);
+		this.sendOnlineUsers(room);
 	}
 
 }  
