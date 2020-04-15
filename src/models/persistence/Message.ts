@@ -10,6 +10,7 @@ export class Message {
 		username: null,
 		user_image: null
 	};
+	deleted:boolean = false;
 
 	constructor(id:string, msg:string, date:Date, user:User) {
 		this._id = id;

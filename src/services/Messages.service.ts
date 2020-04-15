@@ -4,7 +4,8 @@ import { RedisClient } from '../util/RedisClient';
 import { Logger } from '@overnightjs/logger';
 import { injectable, singleton } from "tsyringe";
 import { Err, User, Room, Message } from '../models';
-import { generate24Bit } from '../util';
+import { generate24Bit, clearNullArray } from '../util';
+
 
 
 @injectable()
@@ -19,11 +20,8 @@ export class MessagesService {
 	) {}
 
 	public async newMessage(roomId, user:User, msg) {
-
-		let room = await this.roomDao.getById(roomId);
-		if (!room) throw new Err('Room not found!');
-		await this.canUserMessageRoom(room, user);
-
+		
+		let room = await this.getRoom(roomId, user);
 		let message = new Message(generate24Bit(), msg, new Date(), user);
 		await this.msgDao.saveMessage(message, room.room_name);
 
@@ -33,10 +31,31 @@ export class MessagesService {
 
 	}
 
-	public async listMessages(room) {
-		let x = await this.msgDao.getRoomMessages(room);
-		console.log(x);
-		return x;
+	public async listMessages(roomId, user:User) {
+		let room = await this.getRoom(roomId, user);
+		let messagesIds = await this.msgDao.getMessagesIds(room.room_name);
+		if (messagesIds.length == 0) return [];
+
+		let messages = await this.msgDao.getMessagesByIds(messagesIds);
+		let index;
+
+		for (let i = 0; i < messages.length; i++) {
+			if (messages[i] == null) {
+				index = i-1;
+				break;
+			}
+		}
+
+		if (index !== undefined && index !== null) {
+
+			if (index > -1) {
+				await this.msgDao.deleteMessageId(room.room_name, index);
+			}else {
+				await this.msgDao.deleteAllMessageIds(room.room_name);
+			}
+		}
+
+		return clearNullArray(messages).reverse();
 	}
 
 	private async canUserMessageRoom(room:Room, user:User) {
@@ -52,6 +71,13 @@ export class MessagesService {
 		if (!userRooms.includes(room.room_name)) {
 			throw new Err('Error sending a message! (not in room)');
 		}
+	}
+
+	private async getRoom(roomId, user:User) {
+		let room = await this.roomDao.getById(roomId);
+		if (!room) throw new Err('Room not found!');
+		await this.canUserMessageRoom(room, user);
+		return room as Room;
 	}
 
 }

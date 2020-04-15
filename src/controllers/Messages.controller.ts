@@ -16,10 +16,15 @@ export class MessagesController {
 
 	@Get(':room/messages/list')
 	@Middleware(AuthenticationMiddleware)
-	public async getMessages(req:Request, res:Response) {
+	public async getMessages(req:Request | any, res:Response) {
 
-		let messages = await this.msgService.listMessages(req.params.room);
-		return res.status(200).send(messages);
+		try {
+			let messages = await this.msgService.listMessages(req.params.room, req.user);
+			return res.status(200).send(messages);
+		}catch(e) {
+			Logger.Err(e.error || e);
+			return res.status(e.code || 400).send(e);
+		}
 
 	}
 

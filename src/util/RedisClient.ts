@@ -34,6 +34,11 @@ export class RedisClient {
 		return lrem(key, 0, value);
 	}
 
+	trimList(key, index) {
+		let ltrim = promisify(this.client.ltrim).bind(this.client);
+		return ltrim(key, 0, index);
+	}
+
 	deleteList(key) {
 		let del = promisify(this.client.del).bind(this.client);
 		return del(key);
@@ -87,7 +92,6 @@ export class RedisClient {
 
 	getMultipleSets(keys) {
 		let mget = promisify(this.client.mget).bind(this.client);
-		console.log(keys);
 		return mget(...keys);
 	}
 

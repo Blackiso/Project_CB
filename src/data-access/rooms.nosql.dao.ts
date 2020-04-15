@@ -77,22 +77,12 @@ export class RoomsDao {
 		return await this.redis.getSet('rooms-'+user._id.toString());
 	}
 
-	public async roomExist(name):Promise<boolean | Room> {
-		let room = await this.RoomModel.findOne({ room_name: name }).collation( { locale: 'en', strength: 2 } );
-		if (!room) return false;
-		return room;
-	}
-
-	public async getRoomAdmin(room):Promise<string | null> {
-		return null;
-	}
-
-	public async listRoomUsers(room):Promise<Array<string> | null> {
-		return null;
-	}
-
 	public async socketInRoom(name, sid):Promise<boolean> {
 		return await this.redis.checkSetValue('sockets-'+name, sid) == 1;
+	}
+
+	public async userInRoom(user:User, room:Room) {
+		return await this.redis.checkSetValue('rooms-'+user._id.toString(), room.room_name) == 1;
 	}
 
 	public async removeSocketFromRoom(room, sid) {
@@ -107,10 +97,6 @@ export class RoomsDao {
 			users.push(JSON.parse(data[key]));
 		}
 		return users;
-	}
-
-	public async userInRoom(user:User, room:Room) {
-		return await this.redis.checkSetValue('rooms-'+user._id.toString(), room.room_name) == 1;
 	}
 
 	public async addUserToRoom(roomUser:RoomUser, room:Model | Room, sid, inc?) {

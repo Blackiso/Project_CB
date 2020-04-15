@@ -25,9 +25,8 @@ export class RoomsService {
 		room.room_owner.user_image = user.user_image;
 		room.room_options.privacy = data.privacy;
 		room.online_users = 0;
-		
 
-		if (await this.roomDao.roomExist(room.room_name)) {
+		if (await this.roomDao.getByName(room.room_name)) {
 			throw new Err('Room already exists!');
 		}
 
@@ -41,7 +40,7 @@ export class RoomsService {
 
 		try {
 
-			let room = await this.roomDao.roomExist(room_name) as Room;
+			let room = await this.roomDao.getByName(room_name) as Room;
 
 			if (!room) throw new Err('Room dosen\'t exist!');
 			if (room.room_options.privacy == 'private' && !room.room_users.includes(user._id) && room.room_owner._id.toString() !== user._id.toString()) {

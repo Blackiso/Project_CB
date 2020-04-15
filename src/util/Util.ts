@@ -41,3 +41,11 @@ export let ModelMapper = (data:any, object:object) => {
 	}
 	return object;
 }
+
+export let clearNullArray = (array) => {
+	let a = [] as Array<any>;
+	array.forEach(x => {
+		if (x !== null) a.push(x);
+	}); 
+	return a;
+}

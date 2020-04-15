@@ -174,3 +174,11 @@ body {
 	font-size: 15px;
 	border-bottom: 2px solid rgba(239, 239, 239, 0.26);
 }
+
+.info {
+	font-size: 13px;
+	color: #6d6d6d;
+	width: 100%;
+	text-align: center;
+	margin-top: 10px;
+}

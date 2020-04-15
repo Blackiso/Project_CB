@@ -54,6 +54,14 @@ function newMessage(username, msg) {
 	messagesCont.scrollTop = messagesCont.scrollHeight;
 }
 
+function newInfo(msg) {
+	var span = document.createElement('SPAN');
+	span.classList.add('info');
+	span.innerHTML = msg;
+	messagesCont.appendChild(span);
+	messagesCont.scrollTop = messagesCont.scrollHeight;
+}
+
 // <div class="user">
 // 	<span>Blackiso</span>
 // </div>
@@ -86,6 +94,7 @@ function connectSocket() {
 
 	mySocket.on('INFO', (data) => {
 		console.log('INFO ', data);
+		newInfo(data);
 	});
 
 	mySocket.on('USERS', (data) => {
@@ -122,6 +131,7 @@ function joinRoom(room) {
 			roomId = data._id;
 			roomName.innerHTML = data.room_name;
 			roomLobby.classList.add('hide');
+			getMessages();
 		}
 
 	}, token);
@@ -134,6 +144,15 @@ function createRoom(room) {
 function sendMessage(msg) {
 	ajax('POST', 'http://127.0.0.1/api/room/'+roomId+'/messages', { msg: msg }, () => {
 		console.log('!');
+	}, token);
+}
+
+function getMessages() {
+	ajax('GET', 'http://127.0.0.1/api/room/'+roomId+'/messages/list', { }, (data) => {
+		console.log(data);
+		data.forEach(msg => {
+			newMessage(msg.user.username, msg.msg);
+		});
 	}, token);
 }
 
