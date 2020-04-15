@@ -32,7 +32,8 @@ export class RoomsService {
 
 		let _room = await this.roomDao.save(room);
 		Logger.Info('Room '+room.room_name+' created!');
-		return _room;
+
+		return new RoomDetailsAdv(_room);
 
 	}
 
@@ -105,8 +106,8 @@ export class RoomsService {
 			let multipleSockets = false;
 
 			for (let x = 0; x < userSockets.length; x++) {
-				if (await this.roomDao.socketInRoom(room, userSockets[x]) && userSockets !== sid) {
-					multipleSockets = true;
+				if (userSockets[x] !== sid) {
+					multipleSockets = await this.roomDao.socketInRoom(room, userSockets[x]);
 					break;
 				}
 			}

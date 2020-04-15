@@ -81,7 +81,7 @@ export class RoomsDao {
 		return await this.redis.checkSetValue('sockets-'+name, sid) == 1;
 	}
 
-	public async userInRoom(user:User, room:Room) {
+	public async userInRoom(user:User, room:Room):Promise<boolean> {
 		return await this.redis.checkSetValue('rooms-'+user._id.toString(), room.room_name) == 1;
 	}
 
@@ -89,9 +89,9 @@ export class RoomsDao {
 		await this.redis.removeSet('sockets-'+room, sid);
 	}
 
-	public async getOnlineUsers(name):Promise<Array<any>> {
+	public async getOnlineUsers(name):Promise<Array<RoomUser>> {
 		let data = await this.redis.getHash('users-'+name);
-		let users = [] as Array<object>;
+		let users = [] as Array<RoomUser>;
 
 		for (let key in data) {
 			users.push(JSON.parse(data[key]));

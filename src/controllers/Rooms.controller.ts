@@ -22,8 +22,7 @@ export class RoomsController {
 
 			if (!roomCreateValidator(req.body)) throw new Err("Bad Request!");
 
-			let room = await this.roomsService.createRoom(req.user, req.body) as Room;
-			let response = new RoomResponse(room);
+			let response = await this.roomsService.createRoom(req.user, req.body) as Room;
 			return res.status(200).send(response);
 
 		}catch(e) {
