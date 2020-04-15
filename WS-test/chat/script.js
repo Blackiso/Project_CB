@@ -14,6 +14,10 @@ var userAuthPage = document.querySelector('#userAuth');
 var usernameL = document.querySelector('#usernameL');
 var passwordL = document.querySelector('#passwordL');
 var loginBtn = document.querySelector('#login');
+var usernameR = document.querySelector('#usernameR');
+var passwordR = document.querySelector('#passwordR');
+var emailR = document.querySelector('#emailR');
+var registerBtn = document.querySelector('#register');
 var messagesCont = document.querySelector('#messagesCont');
 var messageInput = document.querySelector('#messageInput');
 var roomName = document.querySelector('#roomName');
@@ -118,6 +122,22 @@ function login(username, password) {
 	});
 }
 
+function register(username, email, password) {
+	console.log('INFO', 'Logging in...');
+	ajax('POST', 'http://127.0.0.1/api/authentication/register', {
+		username: username,
+		password: password,
+		email: email
+	}, (data) => {
+		console.log(data);
+		if (data.token) {
+			token = data.token;
+			userAuthPage.classList.add('hide');
+			connectSocket();
+		}
+	});
+}
+
 function joinRoom(room) {
 	console.log('INFO', 'Joining '+room+'...');
 	ajax('POST', 'http://127.0.0.1/api/rooms/join', {
@@ -138,7 +158,17 @@ function joinRoom(room) {
 }
 
 function createRoom(room) {
+	console.log('INFO', 'Creating '+room+'...');
+	ajax('POST', 'http://127.0.0.1/api/rooms/create', {
+		name: room,
+		privacy: 'public'
+	}, (data) => {
 
+		if (!data.error) {
+			joinRoom(room);
+		}
+
+	}, token);
 }
 
 function sendMessage(msg) {
@@ -172,6 +202,10 @@ roomLobbyCreate.addEventListener('click', () => {
 
 loginBtn.addEventListener('click', () => {
 	login(usernameL.value, passwordL.value);
+});
+
+registerBtn.addEventListener('click', () => {
+	register(usernameR.value, emailR.value, passwordR.value);
 });
 
 messageInput.addEventListener('keypress', (e) => {
