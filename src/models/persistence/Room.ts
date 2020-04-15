@@ -2,12 +2,12 @@ export class Room {
  	
  	_id:string;
  	room_name:string;
- 	room_owner = {
- 		_id: "",
- 		username: "",
- 		user_image: ""
+ 	room_owner:any = {
+ 		_id: null,
+ 		username: null,
+ 		user_image: null
  	};
- 	room_options = {
+ 	room_options:any = {
  		privacy: "",
  		language_filter: false,
  		allow_invites: true

@@ -7,7 +7,7 @@ export class RoomResponse {
  	room_owner:object;
  	online_users:number;
  	room_options:any = {
- 		privacy: ""
+ 		privacy: null
  	};
 
  	constructor(room:Room) {

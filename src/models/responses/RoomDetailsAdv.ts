@@ -5,12 +5,12 @@ export class RoomDetailsAdv {
  	_id:string;
  	room_name:string;
  	room_owner = {
- 		_id: "",
- 		username: "",
- 		user_image: ""
+ 		_id: null,
+ 		username: null,
+ 		user_image: null
  	};
  	room_options = {
- 		privacy: "",
+ 		privacy: null,
  		language_filter: false,
  		allow_invites: true
  	};
