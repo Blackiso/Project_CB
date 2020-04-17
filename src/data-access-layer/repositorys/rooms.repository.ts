@@ -1,14 +1,15 @@
 import mongoose from 'mongoose';
 import { Schema, ObjectId, Model } from 'mongoose';
 import { injectable, singleton } from "tsyringe";
-import { User, Err, Room, RoomUser } from '../models';
+import { User, Room } from '../models';
+import { Err, RoomUser } from '../../domain-layer/domain-models';
 import { Logger } from '@overnightjs/logger';
-import { RedisClient } from '../util/RedisClient';
+import { RedisClient } from '../../util/RedisClient';
 
 
 @injectable()
 @singleton()
-export class RoomsDao {
+export class RoomsRepository {
 
 	private roomsSchema;
 	private RoomModel;

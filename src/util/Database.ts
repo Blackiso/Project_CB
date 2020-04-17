@@ -1,7 +1,7 @@
 import mysql  from 'mysql';
 import { singleton } from "tsyringe";
 import { Logger } from '@overnightjs/logger';
-import { Err } from '../models';
+import { Err } from '../domain-layer/domain-models';
 
 @singleton()
 export class Database {

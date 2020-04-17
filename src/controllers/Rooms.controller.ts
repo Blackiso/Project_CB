@@ -3,9 +3,11 @@ import { Request, Response } from 'express';
 import { Controller, Get, Post, Middleware } from '@overnightjs/core';
 import { AuthenticationMiddleware } from '../middleware';
 import { Logger } from '@overnightjs/logger';
-import { RoomsService } from '../services';
-import { roomCreateValidator, joinRoomValidator, ModelMapper } from '../util';
-import { Err, Room, RoomResponse, UserResponse } from '../models';
+import { RoomsService } from '../domain-layer/services';
+import { roomCreateValidator, joinRoomValidator } from '../validators/Validators';
+import { RoomResponse, UserResponse } from '../response-models';
+import { Err } from '../domain-layer/domain-models';
+import { Room } from '../data-access-layer/models';
 
 
 @injectable()

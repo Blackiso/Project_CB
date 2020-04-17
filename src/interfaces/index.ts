@@ -1,1 +1,0 @@
-export { EventHandler } from './EventHandler';
