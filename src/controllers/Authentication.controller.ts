@@ -1,12 +1,11 @@
 import { injectable } from 'tsyringe';
 import { Request, Response } from 'express';
 import { Controller, Get, Post, Middleware } from '@overnightjs/core';
-import { AuthenticationService } from '../domain-layer/services';
+import { AuthenticationService } from '../services';
 import { Logger } from '@overnightjs/logger';
-import { registerUserValidator, loginUserValidator } from '../validators/Validators';
-import { JWTResponse, UserResponse } from '../response-models';
+import { registerUserValidator, loginUserValidator } from '../util';
+import { Err, JWTResponse, UserResponse } from '../models';
 import { AuthenticationMiddleware } from '../middleware';
-import { Err } from '../domain-layer/domain-models';
 
 
 @injectable()
@@ -21,7 +20,7 @@ export class AuthenticationController {
 		try {
 			if (!registerUserValidator(req.body)) throw new Err("Bad Request!");
 
-			let token = await this.authService.register(req.body.username, req.body.email, req.body.password);
+			let token = await this.authService.registerUser(req);
 			let response = new JWTResponse(token);
 
 			return res.status(200).send(response);
@@ -38,7 +37,7 @@ export class AuthenticationController {
 		try {
 			if (!loginUserValidator(req.body)) throw new Err("Bad Request!");
 
-			let token = await this.authService.login(req.body.username, req.body.password);
+			let token = await this.authService.loginUser(req.body);
 			let response = new JWTResponse(token);
 
 			return res.status(200).send(response);

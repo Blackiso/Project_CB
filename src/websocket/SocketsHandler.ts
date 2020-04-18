@@ -1,9 +1,7 @@
 import { singleton, injectable } from 'tsyringe';
 import { Logger } from '@overnightjs/logger';
-import { User } from '../data-access-layer/models';
+import { User,Err } from '../models';
 import { RedisClient } from '../util/RedisClient';
-import { Err } from '../domain-layer/domain-models';
-
 
 @singleton()
 @injectable()

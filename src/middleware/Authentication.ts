@@ -1,9 +1,8 @@
 import { injectable, singleton } from "tsyringe";
 import { Logger } from '@overnightjs/logger';
-import { User } from '../data-access-layer/models';
+import { Err, User } from '../models';
 import { JWT } from '../util';
-import { UsersDetailsRepository } from '../data-access-layer';
-import { Err } from '../domain-layer/domain-models';
+import { UsersDetailsDao } from '../data-access/';
 
 @injectable()
 @singleton()
@@ -12,7 +11,7 @@ export class Authentication {
 	private error:string = "Unautorized request!";
 	private errorno:number = 401;
 
-	constructor(private userRep:UsersDetailsRepository) {}
+	constructor(private userDao:UsersDetailsDao) {}
 
 	public async authenticate(req:any, res:any, next:any) {
 
@@ -20,7 +19,7 @@ export class Authentication {
 			let token = req.jwt as JWT;
 			if (token == null) throw new Err('Token not found!');
 			let payload = token.getPayload();
-			let user = await this.userRep.getById(payload.uid);
+			let user = await this.userDao.getUserById(payload.uid);
 			
 			if (!token.verify(user)) {
 				Logger.Err("Invalid token!");
@@ -43,7 +42,7 @@ export class Authentication {
 				Logger.Info('Token found => '+ socket.handshake.query.token);
 				let token = new JWT(socket.handshake.query.token);
 				let payload = token.getPayload();
-				let user = await this.userRep.getById(payload.uid);
+				let user = await this.userDao.getUserById(payload.uid);
 				
 				if (!token.verify(user)) {
 					Logger.Err('Invalid token!');

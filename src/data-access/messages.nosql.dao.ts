@@ -1,13 +1,12 @@
 import { injectable, singleton } from "tsyringe";
-import { Message, Room } from '../models';
-import { Err } from '../../domain-layer/domain-models';
+import { Err, Message, Room } from '../models';
 import { Logger } from '@overnightjs/logger';
-import { RedisClient } from '../../util/RedisClient';
+import { RedisClient } from '../util/RedisClient';
 
 
 @injectable()
 @singleton()
-export class MessagesRepository {
+export class MessagesDao {
 
 	constructor(private redis:RedisClient) {}
 

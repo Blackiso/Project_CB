@@ -5,7 +5,7 @@ import { Logger } from '@overnightjs/logger';
 import { Dispatcher } from './Dispatcher';
 import { AuthenticationWSMiddleware, eventWildCard, socketId } from '../middleware';
 import { SocketsHandler } from './SocketsHandler';
-import { RoomsService } from '../domain-layer/services';
+import { RoomsService } from '../services/Rooms.service';
  
 //Main socket that accepts new sockets
 

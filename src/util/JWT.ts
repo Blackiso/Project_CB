@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { User } from '../data-access-layer/models';
+import { User } from '../models';
 
 export class JWT {
 

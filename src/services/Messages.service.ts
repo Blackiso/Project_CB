@@ -1,11 +1,10 @@
-import { SocketsHandler } from '../../websocket/SocketsHandler';
-import { RoomsRepository, MessagesRepository } from '../../data-access-layer';
-import { RedisClient } from '../../util/RedisClient';
+import { SocketsHandler } from '../websocket/SocketsHandler';
+import { RoomsDao, MessagesDao } from '../data-access';
+import { RedisClient } from '../util/RedisClient';
 import { Logger } from '@overnightjs/logger';
 import { injectable, singleton } from "tsyringe";
-import { User, Room, Message } from '../../data-access-layer/models';
-import { generate24Bit, clearNullArray } from '../../util';
-import { Err } from '../../domain-layer/domain-models';
+import { Err, User, Room, Message } from '../models';
+import { generate24Bit, clearNullArray } from '../util';
 
 
 
@@ -14,17 +13,17 @@ import { Err } from '../../domain-layer/domain-models';
 export class MessagesService {
 	
 	constructor(
-		private roomRep:RoomsRepository, 
+		private roomDao:RoomsDao, 
 		private ws:SocketsHandler, 
 		private redis:RedisClient,
-		private msgRep:MessagesRepository
+		private msgDao:MessagesDao
 	) {}
 
 	public async newMessage(roomId, user:User, msg) {
 		
 		let room = await this.getRoom(roomId, user);
 		let message = new Message(generate24Bit(), msg, new Date(), user);
-		await this.msgRep.saveMessage(message, room.room_name);
+		await this.msgDao.saveMessage(message, room.room_name);
 
 		Logger.Info(user.username+': '+msg+' to '+roomId);
 
@@ -34,10 +33,10 @@ export class MessagesService {
 
 	public async listMessages(roomId, user:User) {
 		let room = await this.getRoom(roomId, user);
-		let messagesIds = await this.msgRep.getMessagesIds(room.room_name);
+		let messagesIds = await this.msgDao.getMessagesIds(room.room_name);
 		if (messagesIds.length == 0) return [];
 
-		let messages = await this.msgRep.getMessagesByIds(messagesIds);
+		let messages = await this.msgDao.getMessagesByIds(messagesIds);
 		let index;
 
 		for (let i = 0; i < messages.length; i++) {
@@ -50,9 +49,9 @@ export class MessagesService {
 		if (index !== undefined && index !== null) {
 
 			if (index > -1) {
-				await this.msgRep.deleteMessageId(room.room_name, index);
+				await this.msgDao.deleteMessageId(room.room_name, index);
 			}else {
-				await this.msgRep.deleteAllMessageIds(room.room_name);
+				await this.msgDao.deleteAllMessageIds(room.room_name);
 			}
 		}
 
@@ -75,7 +74,7 @@ export class MessagesService {
 	}
 
 	private async getRoom(roomId, user:User) {
-		let room = await this.roomRep.getById(roomId);
+		let room = await this.roomDao.getById(roomId);
 		if (!room) throw new Err('Room not found!');
 		await this.canUserMessageRoom(room, user);
 		return room as Room;

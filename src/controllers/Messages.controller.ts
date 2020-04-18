@@ -2,10 +2,10 @@ import { injectable } from 'tsyringe';
 import { Request, Response } from 'express';
 import { Controller, Get, Post, Middleware } from '@overnightjs/core';
 import { Logger } from '@overnightjs/logger';
-import { messageValidator } from '../validators/Validators';
-import { Err } from '../domain-layer/domain-models';
+import { messageValidator } from '../util';
+import { Err } from '../models';
 import { AuthenticationMiddleware } from '../middleware';
-import { MessagesService } from '../domain-layer/services';
+import { MessagesService } from '../services';
 
 
 @injectable()

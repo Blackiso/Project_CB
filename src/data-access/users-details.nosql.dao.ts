@@ -1,15 +1,13 @@
 import mongoose from 'mongoose';
 import { Schema, ObjectId } from 'mongoose';
 import { injectable, singleton } from "tsyringe";
-import { User } from '../models';
-import { Err } from '../../domain-layer/domain-models';
+import { User, Err } from '../models';
 import { Logger } from '@overnightjs/logger';
-import { UserDetails } from '../../domain-layer/interfaces';
 
 
 @injectable()
 @singleton()
-export class UsersDetailsRepository implements UserDetails<User> {
+export class UsersDetailsDao {
 	
 	private usersSchema;
 	private UserModel;
@@ -28,7 +26,7 @@ export class UsersDetailsRepository implements UserDetails<User> {
 		this.UserModel = this.getUserModel();
 	}	
 
-	public async save(user:User):Promise<User> {
+	public async saveUser(user:User):Promise<User> {
 		let _user = new this.UserModel({
 			username: user.username,
 			user_email: user.user_email,
@@ -41,31 +39,23 @@ export class UsersDetailsRepository implements UserDetails<User> {
 		return await _user.save();
 	}
 
-	public update(user:User):Promise<User> {
-
-	}
-
-	public delete(user:User) {
-		
-	}
-
-	public async getByEmail(email:string):Promise<User> {
+	public async getUserByEmail(email:string):Promise<User> {
 		let user = await this.UserModel.findOne({ user_email: email });
 		return user;
 	}
 
-	public async getByUsername(username:string):Promise<User> {
+	public async getUserByUsername(username:string):Promise<User> {
 		let user = await this.UserModel.findOne({ username: username }).collation({ locale: 'en', strength: 2 });
 		return user;
 	}
 
-	public async getById(id:string):Promise<User> {
+	public async getUserById(id:number):Promise<User> {
 		let user = await this.UserModel.findOne({ _id: id });
 		return user;
 	}
 
-	public getMultipleById(ids:Array<number>):Promise<any> {
-		
+	public getUsersById(ids:Array<number>):Promise<any> | null {
+		return null;
 	}
 
 	public async checkProperty(obj) {
