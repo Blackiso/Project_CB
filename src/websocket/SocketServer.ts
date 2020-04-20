@@ -34,18 +34,13 @@ export class SocketServer {
 	connection(socket:SocketIO.Socket | any) {
 		Logger.Info('New connection from '+ socket.user.username);
 		socket.on('*', (packet) => {
-			this.dispatcher.dispatch(socket, packet.data[0], packet.data[1]);
+			
 		});
-		socket.on('disconnect', this.disconnected.bind(this, socket));
-		this.socketsHandler.addSocket(socket);
-	}
 
-	disconnected(socket:SocketIO.Socket | any) {
-		this.roomsService.userDisconnected(socket.id, socket.user)
-			.then(x => {
-				Logger.Info(socket.user.username+"["+socket.id+"] disconnected");
-				this.socketsHandler.removeSocket(socket);
-			}).catch(Logger.Err);
+		socket.on('disconnect', () => {
+			this.dispatcher.handdleOuterEvents('disconnect', socket.id, socket.user);
+		});
+		this.socketsHandler.addSocket(socket);
 	}
 
 }

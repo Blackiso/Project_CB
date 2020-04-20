@@ -4,8 +4,8 @@ import { Controller, Get, Post, Middleware } from '@overnightjs/core';
 import { AuthenticationMiddleware } from '../middleware';
 import { Logger } from '@overnightjs/logger';
 import { RoomsService } from '../services';
-import { roomCreateValidator, joinRoomValidator, ModelMapper } from '../util';
-import { Err, Room, RoomResponse, UserResponse } from '../models';
+import { roomCreateValidator, joinRoomValidator } from '../lib/validators';
+import { Err, Room, RoomResponse, RoomDetailsAdv, RoomDetails } from '../models';
 
 
 @injectable()
@@ -22,7 +22,8 @@ export class RoomsController {
 
 			if (!roomCreateValidator(req.body)) throw new Err("Bad Request!");
 
-			let response = await this.roomsService.createRoom(req.user, req.body) as Room;
+			let room = await this.roomsService.create(req.user, req.body.name, { privacy: req.body.privacy }, req.body.sid);
+			let response = new RoomDetailsAdv(room);
 			return res.status(200).send(response);
 
 		}catch(e) {
@@ -40,7 +41,8 @@ export class RoomsController {
 
 			if (!joinRoomValidator(req.body)) throw new Err("Bad Request!");
 
-			let response = await this.roomsService.joinRoom(req.user, req.body.room, req.body.sid);
+			let room = await this.roomsService.join(req.user, req.body.room, req.body.sid);
+			let response = room.room_owner._id == req.user._id.toString() ? new RoomDetailsAdv(room) : new RoomDetails(room);
 			return res.status(200).send(response);
 
 		}catch(e) {
@@ -56,7 +58,8 @@ export class RoomsController {
 
 		try {
 
-			let response = await this.roomsService.listRooms(req.user, req.query.type);
+			let rooms = await this.roomsService.list(req.user, req.query.type);
+			let response = rooms.map(room => new RoomResponse(room));
 			return res.status(200).send(response);
 
 		}catch(e) {

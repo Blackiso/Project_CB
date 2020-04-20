@@ -161,11 +161,17 @@ function createRoom(room) {
 	console.log('INFO', 'Creating '+room+'...');
 	ajax('POST', 'http://127.0.0.1/api/rooms/create', {
 		name: room,
-		privacy: 'public'
+		privacy: 'public',
+		sid: mySocket.id
 	}, (data) => {
 
-		if (!data.error) {
-			joinRoom(room);
+		console.log(data);
+
+		if (data._id) {
+			roomId = data._id;
+			roomName.innerHTML = data.room_name;
+			roomLobby.classList.add('hide');
+			getMessages();
 		}
 
 	}, token);

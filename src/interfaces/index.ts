@@ -1,1 +1,3 @@
-export { EventHandler } from './EventHandler';
+export * from './AuthenticationApi';
+export * from './UserDetails';
+export * from './RoomsApi';

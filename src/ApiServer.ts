@@ -5,7 +5,7 @@ import { container } from "tsyringe";
 import { Logger } from '@overnightjs/logger';
 import useragent from 'express-useragent';
 import { JwtMiddleware } from './middleware';
-import { MongoDb } from './util';
+import { MongoDb } from './lib';
 
 //dev only
 import cors from 'cors';

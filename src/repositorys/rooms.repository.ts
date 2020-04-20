@@ -3,12 +3,12 @@ import { Schema, ObjectId, Model } from 'mongoose';
 import { injectable, singleton } from "tsyringe";
 import { User, Err, Room, RoomUser } from '../models';
 import { Logger } from '@overnightjs/logger';
-import { RedisClient } from '../util/RedisClient';
+import { RedisClient } from '../lib';
 
 
 @injectable()
 @singleton()
-export class RoomsDao {
+export class RoomsRepository {
 
 	private roomsSchema;
 	private RoomModel;
@@ -85,8 +85,8 @@ export class RoomsDao {
 		return await this.redis.checkSetValue('rooms-'+user._id.toString(), room.room_name) == 1;
 	}
 
-	public async removeSocketFromRoom(room, sid) {
-		await this.redis.removeSet('sockets-'+room, sid);
+	public async removeSocketFromRoom(roomName, sid) {
+		await this.redis.removeSet('sockets-'+roomName, sid);
 	}
 
 	public async getOnlineUsers(name):Promise<Array<RoomUser>> {
@@ -109,10 +109,11 @@ export class RoomsDao {
 		await room.save();
 	}
 
-	public async removeUserFromRoom(user:User, room, sid) {
-		await this.redis.deleteHasKey('users-'+room, user._id.toString());
-		await this.redis.removeSet('rooms-'+user._id.toString(), room);
-		await this.redis.removeSet('sockets-'+room, sid);
+	public async removeUserFromRoom(user:User, roomName, sid) {
+		await this.redis.deleteHasKey('users-'+roomName, user._id.toString());
+		await this.redis.removeSet('rooms-'+user._id.toString(), roomName);
+		await this.redis.removeSet('sockets-'+roomName, sid);
+		await this.removeSocketFromRoom(roomName, sid);
 	}
 
 	public async decreaseOnlineUsersCount(rooms_name:Array<string>) {

@@ -1,27 +1,61 @@
 import { container } from "tsyringe";
-import { Authentication } from './Authentication';
+import { AuthenticationService } from '../services';
 import { Logger } from '@overnightjs/logger';
 import { EventEmitter } from 'events';
-import { JWT } from '../util';
+import { JWT } from '../lib';
+import { Err } from '../models';
 
 
-export let AuthenticationMiddleware = (req:any, res:any, next:any) => {
-	let auth =  container.resolve(Authentication);
-	auth.authenticate(req, res, next);
+export let AuthenticationMiddleware = async (req:any, res:any, next:any) => {
+	try {
+		let authService =  container.resolve(AuthenticationService);
+		let user = await authService.authenticate(req.token);
+		req.user = user;
+		next();
+	}catch(e) {
+		Logger.Err(e.error || e);
+		return res.status(401).send(new Err("Unautorized request!", 401));
+	}
 }
 
-export let AuthenticationWSMiddleware = (socket, next:any) => {
-	let auth =  container.resolve(Authentication);
-	auth.authenticateWS(socket, next);
+export let AuthenticationWSMiddleware = async (socket, next:any) => {
+	Logger.Info('Trying to authenticate socket');
+	try {
+
+		if (socket.handshake.query && socket.handshake.query.token) {
+			Logger.Info('Token found => '+ socket.handshake.query.token);
+
+			let token = new JWT(socket.handshake.query.token);
+			let authService =  container.resolve(AuthenticationService);
+			let user = await authService.authenticate(token);
+
+			socket.user = user;
+			next();
+
+		}else {
+			Logger.Err('Token not found');
+			throw new Err('Token not found');
+		}
+
+		
+	}catch(e) {
+		Logger.Err(e.error || 'Token Error');
+		next(new Err('Authentication error'));
+	}
 }
+
 
 export let JwtMiddleware = (req:any, res:any, next:any) => {
-	if (req.headers.authorization) {
-		req.jwt = new JWT(req.headers.authorization.replace('Bearer ', ''));
-	}else {
-		Logger.Warn("Token not found!");
-		req.jwt = null;
+	try {
+		if (!req.headers.authorization) throw 'No Auth Headers';
+		let token = req.headers.authorization.replace('Bearer ', '');
+		if (token.length < 10)  throw 'Token not found!';
+		req.token = new JWT(token);
+	}catch(e) {
+		Logger.Warn(e);
+		req.token = null;
 	}
+
 	next();
 }
 

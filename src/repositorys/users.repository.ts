@@ -3,16 +3,17 @@ import { Schema, ObjectId } from 'mongoose';
 import { injectable, singleton } from "tsyringe";
 import { User, Err } from '../models';
 import { Logger } from '@overnightjs/logger';
+import { RedisClient } from '../lib';
 
 
 @injectable()
 @singleton()
-export class UsersDetailsDao {
+export class UsersRepository {
 	
 	private usersSchema;
 	private UserModel;
 
-	constructor() {
+	constructor(private redis:RedisClient) {
 		this.usersSchema = new Schema({
 			username: String,
 			user_email: String,
@@ -23,10 +24,10 @@ export class UsersDetailsDao {
 			user_friends: [ObjectId]
 		});
 		this.usersSchema.index({ username: 1 }, { collation: { locale: 'en', strength: 2 } });
-		this.UserModel = this.getUserModel();
+		this.UserModel = this.getModel();
 	}	
 
-	public async saveUser(user:User):Promise<User> {
+	public async save(user:User):Promise<User> {
 		let _user = new this.UserModel({
 			username: user.username,
 			user_email: user.user_email,
@@ -39,19 +40,23 @@ export class UsersDetailsDao {
 		return await _user.save();
 	}
 
-	public async getUserByEmail(email:string):Promise<User> {
+	public async getByEmail(email:string):Promise<User> {
 		let user = await this.UserModel.findOne({ user_email: email });
 		return user;
 	}
 
-	public async getUserByUsername(username:string):Promise<User> {
+	public async getByUsername(username:string):Promise<User> {
 		let user = await this.UserModel.findOne({ username: username }).collation({ locale: 'en', strength: 2 });
 		return user;
 	}
 
-	public async getUserById(id:number):Promise<User> {
+	public async getById(id:number):Promise<User> {
 		let user = await this.UserModel.findOne({ _id: id });
 		return user;
+	}
+
+	public async getSockets(userId) {
+		return await this.redis.getAllList('sockets-'+userId);
 	}
 
 	public getUsersById(ids:Array<number>):Promise<any> | null {
@@ -65,7 +70,7 @@ export class UsersDetailsDao {
 		return true;
 	}
 
-	private getUserModel() { 
+	private getModel() { 
 		return mongoose.model('User', this.usersSchema);
 	}
 	

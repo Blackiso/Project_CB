@@ -1,4 +1,4 @@
-import { injectable, singleton } from "tsyringe";
+/*import { injectable, singleton } from "tsyringe";
 import { Logger } from '@overnightjs/logger';
 import { Err, User } from '../models';
 import { JWT } from '../util';
@@ -62,4 +62,4 @@ export class Authentication {
 		}
 
 	}
-}
+}*/

@@ -2,7 +2,7 @@ import { injectable } from 'tsyringe';
 import { Request, Response } from 'express';
 import { Controller, Get, Post, Middleware } from '@overnightjs/core';
 import { Logger } from '@overnightjs/logger';
-import { messageValidator } from '../util';
+import { messageValidator } from '../lib/validators';
 import { Err } from '../models';
 import { AuthenticationMiddleware } from '../middleware';
 import { MessagesService } from '../services';

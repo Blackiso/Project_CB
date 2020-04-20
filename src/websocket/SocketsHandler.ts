@@ -1,7 +1,7 @@
 import { singleton, injectable } from 'tsyringe';
 import { Logger } from '@overnightjs/logger';
 import { User,Err } from '../models';
-import { RedisClient } from '../util/RedisClient';
+import { RedisClient } from '../lib';
 
 @singleton()
 @injectable()
@@ -19,8 +19,8 @@ export class SocketsHandler {
 		this.redis.addStringToList('sockets-'+socket.user._id.toString(), socket.id).then(Logger.Info).catch(Logger.Err);
 	}
 
-	removeSocket(socket:SocketIO.Socket | any) {
-		this.redis.removeFromList('sockets-'+socket.user._id.toString(), socket.id).then(Logger.Info).catch(Logger.Err);
+	removeSocket(user:User, sid:string) {
+		this.redis.removeFromList('sockets-'+user._id.toString(), sid).then(Logger.Info).catch(Logger.Err);
 	}
 
 	sendToRoom(type, message, room) {

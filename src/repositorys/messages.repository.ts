@@ -1,19 +1,19 @@
 import { injectable, singleton } from "tsyringe";
 import { Err, Message, Room } from '../models';
 import { Logger } from '@overnightjs/logger';
-import { RedisClient } from '../util/RedisClient';
+import { RedisClient } from '../lib';
 
 
 @injectable()
 @singleton()
-export class MessagesDao {
+export class MessagesRepository {
 
 	constructor(private redis:RedisClient) {}
 
 	public async saveMessage(message:Message, roomName:string) {
 		let rm = roomName+'-'+message._id;
 		await this.redis.addStringToList('messages-'+roomName, rm);
-		return this.redis.addExpireSet(rm, JSON.stringify(message), /*600*/ 30);		
+		return this.redis.addExpireSet(rm, JSON.stringify(message), 600);		
 	}
 
 	public async getMessagesIds(roomName:string):Promise<Array<string>> {
