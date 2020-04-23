@@ -26,12 +26,12 @@ export class RoomsRepository {
 				language_filter: Boolean,
 				allow_invites: Boolean
 			},
-			room_mods: [ObjectId],
-			room_users: [ObjectId],
-			room_banned: [ObjectId],
+			room_mods: [String],
+			room_users: [String],
+			room_banned: [String],
 			invited_users: [
 				{
-					_id: [ObjectId],
+					_id: [String],
 					username: String,
 					invited_by: String
 				}
@@ -85,6 +85,10 @@ export class RoomsRepository {
 		return await this.redis.checkSetValue('rooms-'+user._id.toString(), room.room_name) == 1;
 	}
 
+	public async update(room:Model):Promise<Room> {
+		return await room.save();
+	}
+
 	public async removeSocketFromRoom(roomName, sid) {
 		await this.redis.removeSet('sockets-'+roomName, sid);
 	}
@@ -103,10 +107,14 @@ export class RoomsRepository {
 		if (!room.room_users.includes(roomUser._id)) room.room_users.push(roomUser._id);
 		if(inc) room.online_users++;
 
-		await this.redis.addHashKey('users-'+room.room_name, roomUser._id.toString(), roomUser);
+		await this.addOnlineUser(roomUser, room.room_name);
 		await this.redis.addSet('sockets-'+room.room_name, sid);
 		await this.redis.addSet('rooms-'+roomUser._id, room.room_name);
-		await room.save();
+		await this.update(room);
+	}
+
+	public async addOnlineUser(roomUser:RoomUser, roomName:string) {
+		await this.redis.addHashKey('users-'+roomName, roomUser._id.toString(), roomUser);
 	}
 
 	public async removeUserFromRoom(user:User, roomName, sid) {

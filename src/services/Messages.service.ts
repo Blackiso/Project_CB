@@ -1,41 +1,46 @@
-import { SocketsHandler } from '../websocket/SocketsHandler';
-import { RoomsRepository, MessagesRepository } from '../repositorys';
-import { RedisClient } from '../lib';
+import { RoomsRepository, MessagesRepository, UsersRepository } from '../repositorys';
 import { Logger } from '@overnightjs/logger';
 import { injectable, singleton } from "tsyringe";
 import { Err, User, Room, Message } from '../models';
 import { generate24Bit, clearNullArray } from '../lib/common';
-
+import { MessagesApi } from '../interfaces';
+import { EventEmitter } from 'events';
 
 
 @injectable()
 @singleton()
-export class MessagesService {
+export class MessagesService implements MessagesApi<User, Message> {
+
+	private messagesEvents:EventEmitter = new EventEmitter();	
 	
 	constructor(
-		private roomRep:RoomsRepository, 
-		private ws:SocketsHandler, 
-		private redis:RedisClient,
-		private msgRep:MessagesRepository
+		private roomRep:RoomsRepository,
+		private msgRep:MessagesRepository,
+		private usersRep:UsersRepository
 	) {}
 
-	public async newMessage(roomId, user:User, msg) {
-		
-		let room = await this.getRoom(roomId, user);
-		let message = new Message(generate24Bit(), msg, new Date(), user);
-		await this.msgRep.saveMessage(message, room.room_name);
-
-		Logger.Info(user.username+': '+msg+' to '+roomId);
-
-		this.ws.sendToRoom('MESG', JSON.stringify(message), room.room_name);
-
+	public get events() {
+		return this.messagesEvents;
 	}
 
-	public async listMessages(roomId, user:User) {
+	public async save(roomId:string, user:User, msg:string):Promise<Message> {
 		let room = await this.getRoom(roomId, user);
+		let message = new Message(generate24Bit(), msg, new Date(), user);
+
+		await this.canUserMessageRoom(room, user);
+		await this.msgRep.save(message, room.room_name);
+
+		Logger.Info(user.username+': '+msg+' to '+roomId);
+		this.messagesEvents.emit('room_message', message, room.room_name);
+		return message;
+	}
+
+	public async list(roomId:string, user:User):Promise<Message[]> {
+		let room = await this.getRoom(roomId, user);
+		await this.canUserMessageRoom(room, user);
+
 		let messagesIds = await this.msgRep.getMessagesIds(room.room_name);
 		if (messagesIds.length == 0) return [];
-
 		let messages = await this.msgRep.getMessagesByIds(messagesIds);
 		let index;
 
@@ -58,25 +63,49 @@ export class MessagesService {
 		return clearNullArray(messages).reverse();
 	}
 
+	public async delete(roomId:string, user:User, messageId:string) {
+		let room = await this.getRoom(roomId, user);
+		await this.canUserMessageRoom(room, user);
+
+		if (room.room_mods.includes(user._id) || room.room_owner._id.toString() == user._id.toString()) {
+			
+			let message = await this.msgRep.getMessageById(room.room_name, messageId);
+			let delMsg = 'Message removed';
+
+			if (message !== null) {
+				message.msg = delMsg;
+				message.deleted = true;
+				await this.msgRep.update(room.room_name, messageId, message);
+			}else {
+				message = { _id: messageId, msg: delMsg, deleted: true } as any;
+			}
+
+			this.messagesEvents.emit('message_update', message, room.room_name);
+
+		}else {
+			throw new Err('Error can\'t modify room', 401);
+		}
+
+	}
+
 	private async canUserMessageRoom(room:Room, user:User) {
 		if (room.room_banned.includes(user._id)) {
-			throw new Err('User is banned from room');
+			throw new Err('User is banned from room', 401);
 		}
 
-		if (room.room_options.privacy == 'private' && !room.room_users.includes(user._id)) {
-			throw new Err('Error sending a message! (private room)');
+		if (room.room_options.privacy == 'private' && !room.room_users.includes(user._id.toString())) {
+			throw new Err('Error sending a message! (private room)', 401);
 		}
 
-		let userRooms = await this.redis.getSet('rooms-'+user._id);
+		let userRooms = await this.roomRep.getUserRooms(user);
 		if (!userRooms.includes(room.room_name)) {
-			throw new Err('Error sending a message! (not in room)');
+			throw new Err('Error sending a message! (not in room)', 401);
 		}
 	}
 
 	private async getRoom(roomId, user:User) {
 		let room = await this.roomRep.getById(roomId);
 		if (!room) throw new Err('Room not found!');
-		await this.canUserMessageRoom(room, user);
 		return room as Room;
 	}
 

@@ -1,6 +1,12 @@
 var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI1ZTdiZmNiNGNiZWRjNjAzN2QxNGNjODQiLCJ1bm0iOiJCbGFja2lzbyIsImVtbCI6ImJsYWNrQGVtYWlsLmNvbSIsImlhdCI6MTU4NjI5NTg1MiwiZXhwIjoxNTg2OTAwNjUyfQ.LKXYZq0HZUtLjfkztW88v2J0IS__Ffrpa-rXPY9djHg";
 var mySocket;
+var host = location.host.split(':')[0];
 var roomId;
+var global_room;
+var global_username;
+var global_room_username;
+var global_messages = [];
+var global_users;
 
 //HTML Elems
 var roomLobby = document.querySelector('#roomLobby');
@@ -43,17 +49,24 @@ function ajax(metod, link, body, call, t = null) {
 // 	<p>sdf</p>
 // </div>
 
-function newMessage(username, msg) {
+function newMessage(id, username, msg, admin = false, del = false) {
 	var div = document.createElement('DIV');
 	var span = document.createElement('SPAN');
+	var span2 = document.createElement('DIV');
 	var p = document.createElement('P');
 
 	div.classList.add('message-blob');
-	if (username.toLowerCase() == usernameL.value.toLowerCase()) div.classList.add('me');
+	if (is_me(username)) div.classList.add('me');
+	if (del) p.classList.add('ital');
 	span.innerHTML = username;
+	span2.innerHTML = 'delete';
+	span2.classList.add('deleteMsg');
+	span2.dataset.id = id;
+	span2.onclick = deleteMessage;
 	p.innerHTML = msg;
 	div.appendChild(span);
 	div.appendChild(p);
+	if (admin) div.appendChild(span2);
 	messagesCont.appendChild(div);
 	messagesCont.scrollTop = messagesCont.scrollHeight;
 }
@@ -71,51 +84,91 @@ function newInfo(msg) {
 // </div>
 
 function newUsersList(users) {
+	if (global_room == null) {
+		setTimeout(() => {
+			newUsersList(users);
+		}, 5);
+		return;
+	}
 	onlineUsers.innerHTML = "";
 	users.forEach(user => {
 		var div = document.createElement('DIV');
 		var span = document.createElement('SPAN');
+		// var btn1 = document.createElement('BUTTON');
+		var btn2 = document.createElement('BUTTON');
 
 		div.classList.add('user');
+		if (user.is_mod) div.style.background = 'pink';
+		if (user.is_admin) div.style.background = 'red';
 		span.innerHTML = user.username;
+		// btn1.innerHTML = 'Ban user';
+		btn2.innerHTML = user.is_mod ? 'Unmod user' : 'Mod user';
+		btn2.onclick = modUser;
+		btn2.dataset.id = user._id;
 		div.appendChild(span);
+		// if (!is_me(user.username) && global_room.user.is_admin || global_room.user.is_mod) div.appendChild(btn1);
+		if (!is_me(user.username) && global_room.user.is_admin) div.appendChild(btn2);
 		onlineUsers.appendChild(div);
 	});
 }
 
+function is_me(username) {
+	return username.toLowerCase() == global_username.toLowerCase();
+}
+
+function getUser(id) {
+	return global_users.find(u => u._id == id);
+}
+
 function connectSocket() {
-	mySocket = io.connect('http://127.0.0.1', { query: { token: token } });
+	mySocket = io.connect('http://'+host, { query: { token: token } });
 
 	mySocket.on('connect', () => {
 		console.log('Connected to ', mySocket.id);
 	});
 
 	mySocket.on('MESG', (data) => {
-		var msg = JSON.parse(data);
-		console.log(msg);
-		newMessage(msg.user.username, msg.msg);
+		global_messages.push(data);
+		displayMessages();
+	});
+
+	mySocket.on('MESG_DEL', (data) => {
+		global_messages.forEach(msg => {
+			if (msg._id == data._id) {
+				msg.deleted = data.deleted;
+				msg.msg = data.msg;
+			}
+		});
+		displayMessages();
 	});
 
 	mySocket.on('INFO', (data) => {
 		console.log('INFO ', data);
-		newInfo(data);
+		global_messages.push(data);
+		displayMessages();
 	});
 
 	mySocket.on('USERS', (data) => {
 		console.log(data);
+		global_users = data;
 		newUsersList(data);	
+	});
+
+	mySocket.on('ROOM_UPDATE', () => {
+		getRoom(global_room._id);
 	});
 }
 
 function login(username, password) {
 	console.log('INFO', 'Logging in...');
-	ajax('POST', 'http://127.0.0.1/api/authentication/login', {
+	ajax('POST', 'http://'+host+'/api/authentication/login', {
 		username: username,
 		password: password
 	}, (data) => {
 		console.log(data);
 		if (data.token) {
 			token = data.token;
+			global_username = username;
 			userAuthPage.classList.add('hide');
 			connectSocket();
 		}
@@ -124,7 +177,7 @@ function login(username, password) {
 
 function register(username, email, password) {
 	console.log('INFO', 'Logging in...');
-	ajax('POST', 'http://127.0.0.1/api/authentication/register', {
+	ajax('POST', 'http://'+host+'/api/authentication/register', {
 		username: username,
 		password: password,
 		email: email
@@ -132,6 +185,7 @@ function register(username, email, password) {
 		console.log(data);
 		if (data.token) {
 			token = data.token;
+			global_username = username;
 			userAuthPage.classList.add('hide');
 			connectSocket();
 		}
@@ -140,7 +194,7 @@ function register(username, email, password) {
 
 function joinRoom(room) {
 	console.log('INFO', 'Joining '+room+'...');
-	ajax('POST', 'http://127.0.0.1/api/rooms/join', {
+	ajax('POST', 'http://'+host+'/api/rooms/join', {
 		room: room,
 		sid: mySocket.id
 	}, (data) => {
@@ -150,6 +204,8 @@ function joinRoom(room) {
 		if (data._id) {
 			roomId = data._id;
 			roomName.innerHTML = data.room_name;
+			global_room_username = data.room_owner.username;
+			global_room = data;
 			roomLobby.classList.add('hide');
 			getMessages();
 		}
@@ -159,7 +215,7 @@ function joinRoom(room) {
 
 function createRoom(room) {
 	console.log('INFO', 'Creating '+room+'...');
-	ajax('POST', 'http://127.0.0.1/api/rooms/create', {
+	ajax('POST', 'http://'+host+'/api/rooms/create', {
 		name: room,
 		privacy: 'public',
 		sid: mySocket.id
@@ -170,6 +226,8 @@ function createRoom(room) {
 		if (data._id) {
 			roomId = data._id;
 			roomName.innerHTML = data.room_name;
+			global_room_username = data.room_owner.username;
+			global_room = data;
 			roomLobby.classList.add('hide');
 			getMessages();
 		}
@@ -177,21 +235,74 @@ function createRoom(room) {
 	}, token);
 }
 
+function getRoom(id) {
+
+	ajax('GET', 'http://'+host+'/api/rooms/'+id, {}, (data) => {
+
+		console.log(data);
+
+		if (data._id) {
+			roomId = data._id;
+			roomName.innerHTML = data.room_name;
+			global_room_username = data.room_owner.username;
+			global_room = data;
+			displayMessages();
+		}
+
+	}, token);
+}
+
 function sendMessage(msg) {
-	ajax('POST', 'http://127.0.0.1/api/room/'+roomId+'/messages', { msg: msg }, () => {
+	ajax('POST', 'http://'+host+'/api/room/'+roomId+'/messages', { msg: msg }, () => {
 		console.log('!');
 	}, token);
 }
 
 function getMessages() {
-	ajax('GET', 'http://127.0.0.1/api/room/'+roomId+'/messages/list', { }, (data) => {
+	ajax('GET', 'http://'+host+'/api/room/'+roomId+'/messages/list', { }, (data) => {
 		console.log(data);
-		data.forEach(msg => {
-			newMessage(msg.user.username, msg.msg);
-		});
+		global_messages = global_messages.concat(data);
+		console.log('g => ', global_messages);
+		displayMessages();
 	}, token);
 }
 
+function deleteMessage(e) {
+	let id = e.currentTarget.dataset.id;
+	ajax('DELETE', 'http://'+host+'/api/room/'+roomId+'/messages/'+id, { }, (data) => {
+		console.log('deleted');	
+	}, token);
+}
+
+function modUser(e) {
+	let id = e.currentTarget.dataset.id;
+	let user = getUser(id);
+	ajax('POST', 'http://'+host+'/api/rooms/'+roomId+'/users/'+id+'/mod', { }, (data) => {
+		console.log('moded');	
+	}, token);
+}
+
+function banUser(e) {
+	// let id = e.currentTarget.dataset.id;
+	// let user = getUser(id);
+	// let x = user.is_mod ? 'ban' : 'unban';
+	// ajax('POST', 'http://'+host+'/api/room/'+roomId+'/user/'+id+'/'+x, { }, (data) => {
+	// 	console.log('moded');	
+	// }, token);
+}
+
+
+function displayMessages() {
+	messagesCont.innerHTML = '';
+	global_messages.forEach(data => {
+		if (data.type == 'info') {
+			newInfo(data.msg);
+		}else {
+			let x = global_room.user.is_admin || global_room.user.is_mod;
+			newMessage(data._id, data.user.username, data.msg, x, data.deleted);
+		}	
+	});
+}
 
 roomLobbyJoin.addEventListener('click', () => {
 	joinRoom(jRoomName.value);

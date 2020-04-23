@@ -118,6 +118,10 @@ body {
 	background: #3c588a !important;
 }
 
+.me > div {
+	float: right !important;
+}
+
 .message-blob > span {
 	display: block;
 	margin-bottom: 10px;
@@ -130,6 +134,14 @@ body {
 	padding: 15px;
 	border-radius: 10px;
 	margin: 0;
+}
+
+.message-blob > div {
+	font-size: 12px;
+    margin-top: 5px;
+    cursor: pointer;
+    float: left;
+	color: #6f6868;
 }
 
 .message-input {
@@ -175,10 +187,21 @@ body {
 	border-bottom: 2px solid rgba(239, 239, 239, 0.26);
 }
 
+.user > button {
+	font-size: 10px;
+    margin-left: 15px;
+    cursor: pointer;
+}
+
 .info {
 	font-size: 13px;
 	color: #6d6d6d;
 	width: 100%;
 	text-align: center;
 	margin-top: 10px;
+}
+
+.ital {
+	font-style: italic !important;
+	color: #b1b1b1;
 }

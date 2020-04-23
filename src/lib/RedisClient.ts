@@ -90,9 +90,21 @@ export class RedisClient {
 		return smembers(key);
 	}
 
-	getMultipleSets(keys) {
+	getExpiredSet(...keys) {
 		let mget = promisify(this.client.mget).bind(this.client);
 		return mget(...keys);
+	}
+
+	updateExpiredSet(key, value) {
+		let ttl = promisify(this.client.ttl).bind(this.client);
+		ttl(key).then(t => {
+			console.log(key, t);
+			if (t > 0) {
+				return this.addExpireSet(key, value, t);
+			}else {
+				return null;
+			}
+		});
 	}
 
 	checkSetValue(key, value) {

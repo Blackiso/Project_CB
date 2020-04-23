@@ -6,5 +6,6 @@ export interface RoomsApi<U, R> {
 	leave(user:U, roomName:string, sid:string):void;
 	disconnect(user:U, sid:string):void;
 	getOnline(roomName:string):Promise<Array<any>>;
+	modUser(user:U, userId:string, roomId:string);
 
 }

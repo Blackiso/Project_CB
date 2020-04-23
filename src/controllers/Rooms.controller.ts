@@ -23,7 +23,9 @@ export class RoomsController {
 			if (!roomCreateValidator(req.body)) throw new Err("Bad Request!");
 
 			let room = await this.roomsService.create(req.user, req.body.name, { privacy: req.body.privacy }, req.body.sid);
-			let response = new RoomDetailsAdv(room);
+			let is_mod = room.room_mods.includes(req.user._id);
+			let is_admin = room.room_owner._id.toString() == req.user._id.toString();
+			let response = new RoomDetailsAdv(room, is_mod, is_admin);
 			return res.status(200).send(response);
 
 		}catch(e) {
@@ -42,7 +44,29 @@ export class RoomsController {
 			if (!joinRoomValidator(req.body)) throw new Err("Bad Request!");
 
 			let room = await this.roomsService.join(req.user, req.body.room, req.body.sid);
-			let response = room.room_owner._id == req.user._id.toString() ? new RoomDetailsAdv(room) : new RoomDetails(room);
+			let is_mod = room.room_mods.includes(req.user._id);
+			let is_admin = room.room_owner._id.toString() == req.user._id.toString();
+			let response = room.room_owner._id == req.user._id.toString() ? new RoomDetailsAdv(room, is_mod, is_admin) : new RoomDetails(room, is_mod, is_admin);
+			return res.status(200).send(response);
+
+		}catch(e) {
+			Logger.Err(e.error || e);
+			return res.status(e.code || 400).send(e);
+		}
+		
+	}
+
+
+	@Get(':roomId')
+	@Middleware(AuthenticationMiddleware)
+	public async room(req:Request | any, res:Response) {
+
+		try {
+
+			let room = await this.roomsService.getRoom(req.user, req.params.roomId);
+			let is_mod = room.room_mods.includes(req.user._id);
+			let is_admin = room.room_owner._id.toString() == req.user._id.toString();
+			let response = room.room_owner._id == req.user._id.toString() ? new RoomDetailsAdv(room, is_mod, is_admin) : new RoomDetails(room, is_mod, is_admin);
 			return res.status(200).send(response);
 
 		}catch(e) {
@@ -61,6 +85,25 @@ export class RoomsController {
 			let rooms = await this.roomsService.list(req.user, req.query.type);
 			let response = rooms.map(room => new RoomResponse(room));
 			return res.status(200).send(response);
+
+		}catch(e) {
+			Logger.Err(e.error || e);
+			return res.status(e.code || 400).send(e);
+		}
+
+	}
+
+	@Post(':roomId/users/:id/mod')
+	@Middleware(AuthenticationMiddleware)
+	public async moderators(req:Request | any, res:Response) {
+
+		try {
+
+			let roomId = req.params.roomId;
+			let userId = req.params.id;
+
+			await this.roomsService.modUser(req.user, userId, roomId);
+			return res.status(200).send();
 
 		}catch(e) {
 			Logger.Err(e.error || e);

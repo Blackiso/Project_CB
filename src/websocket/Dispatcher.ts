@@ -1,5 +1,5 @@
 import { singleton, injectable } from 'tsyringe';
-import { RoomsService } from '../services';
+import { RoomsService, MessagesService } from '../services';
 import { EventEmitter } from 'events';
 import { SocketsHandler } from './SocketsHandler';
 import { Logger } from '@overnightjs/logger';
@@ -9,13 +9,17 @@ import { Logger } from '@overnightjs/logger';
 @singleton()
 export class Dispatcher {
 	
-	constructor(private roomsService:RoomsService, private ws:SocketsHandler) {
+	constructor(
+		private roomsService:RoomsService, 
+		private messagesService:MessagesService, 
+		private ws:SocketsHandler
+	) {
 		this.handdleInnerEvents();
 	}
 
 	handdleInnerEvents() {
 		this.roomsService.events.on('users_update', (message, roomName) => {
-			if (message !== null) this.ws.sendToRoom('INFO', message, roomName);
+			if (message !== null) this.ws.sendToRoom('INFO', { type: 'info', msg: message }, roomName);
 			this.roomsService.getOnline(roomName)
 				.then(users => {
 					this.ws.sendToRoom('USERS', users, roomName);
@@ -29,6 +33,18 @@ export class Dispatcher {
 
 		this.roomsService.events.on('socket_joined_room', (sid, userId, roomName) => {
 			this.ws.addSocketToRoom(sid, roomName, userId);
+		});
+
+		this.roomsService.events.on('room_update', (roomName) => {
+			this.ws.sendToRoom('ROOM_UPDATE', '', roomName);
+		});
+
+		this.messagesService.events.on('room_message', (message, roomName) => {
+			this.ws.sendToRoom('MESG', message, roomName);
+		});
+
+		this.messagesService.events.on('message_update', (message, roomName) => {
+			this.ws.sendToRoom('MESG_DEL', message, roomName);
 		});
 	}
 

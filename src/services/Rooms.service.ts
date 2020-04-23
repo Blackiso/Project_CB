@@ -1,6 +1,6 @@
 import { Logger } from '@overnightjs/logger';
 import { injectable, singleton } from "tsyringe";
-import { User, Err, Room, RoomUser, RoomResponse, RoomDetails, RoomDetailsAdv } from '../models';
+import { User, Err, Room, RoomUser } from '../models';
 import { RoomsRepository, UsersRepository } from '../repositorys';
 import { RoomsApi } from '../interfaces';
 import { EventEmitter } from 'events';
@@ -48,7 +48,7 @@ export class RoomsService implements RoomsApi<User, Room> {
 
 			if (!room._id) room = await this.roomRep.getByName(room);
 			if (!room) throw new Err('Room dosen\'t exist!');
-			if (room.room_options.privacy == 'private' && !room.room_users.includes(user._id) && room.room_owner._id.toString() !== user._id.toString()) {
+			if (room.room_options.privacy == 'private' && !room.room_users.includes(user._id.toString()) && room.room_owner._id.toString() !== user._id.toString()) {
 				throw new Error('Private room!');
 			}
 			if (room.room_banned.includes(user._id)) throw new Err('User is banned!', 401);
@@ -56,7 +56,7 @@ export class RoomsService implements RoomsApi<User, Room> {
 			await this.addUserToRoom(user, room, sid);
 
 			this.roomsEvents.emit('socket_joined_room', sid, user._id.toString(), room.room_name);
-			this.roomsEvents.emit('users_update', user.username+' joined', room.room_name);
+			this.roomsEvents.emit('users_update', user.username+' joined the room', room.room_name);
 
 			Logger.Info(user.username+' joined '+room.room_name);
 
@@ -84,6 +84,34 @@ export class RoomsService implements RoomsApi<User, Room> {
 		}
 
 		return rooms;
+	}
+
+	public async modUser(user:User, userId:string, roomId:string) {
+		let room = await this.roomRep.getById(roomId);
+		let roomUsers = await this.getOnline(room.room_name);
+
+		if (this.userCanModifyRoom(user, room) && room.room_users.includes(userId)) {
+			let is_mod = room.room_mods.includes(userId);
+
+			if (is_mod) {
+				room.room_mods = room.room_mods.filter(id => id !== userId);
+			}else {
+				room.room_mods.push(userId);
+			}
+
+			let roomUser = roomUsers.find(u => u._id == userId) as RoomUser;
+			roomUser.is_mod = !is_mod;
+
+			await this.roomRep.update(room);
+			if (roomUser !== null) await this.roomRep.addOnlineUser(roomUser, room.room_name);
+
+			let msg = roomUser.is_mod ? roomUser.username+' is now a moderator' : roomUser.username+' is no longer a moderator';
+			this.roomsEvents.emit('users_update', msg, room.room_name);
+			this.roomsEvents.emit('room_update', room.room_name);
+
+		}else {
+			throw new Err('Can\'t mod user', 401);
+		}
 	}
 
 	public async disconnect(user:User, sid) {
@@ -123,7 +151,7 @@ export class RoomsService implements RoomsApi<User, Room> {
 		}
 
 		await this.roomRep.removeUserFromRoom(user, roomName, sid);
-		this.roomsEvents.emit('users_update', user.username+' left', roomName);
+		this.roomsEvents.emit('users_update', user.username+' left the room', roomName);
 
 		return true;
 
@@ -131,6 +159,16 @@ export class RoomsService implements RoomsApi<User, Room> {
 
 	public async getOnline(roomName:string):Promise<Array<RoomUser>> {
 		return await await this.roomRep.getOnlineUsers(roomName);
+	}
+
+	public async getRoom(user:User, roomId:string):Promise<Room> {
+		let room = await this.roomRep.getById(roomId);
+		if (room == null) throw new Err('Room not found!');
+		if (room.room_users.includes(user._id.toString())) {
+			return room;
+		}else {
+			throw new Err('Error retrieving room', 401);
+		}
 	}
 
 	private async addUserToRoom(user:User, room:Room, sid) {
@@ -142,6 +180,10 @@ export class RoomsService implements RoomsApi<User, Room> {
 		roomUser.is_mod = room.room_mods.includes(user._id);
 		await this.roomRep.addUserToRoom(roomUser, room, sid, inc);
 
+	}
+
+	private userCanModifyRoom(user:User, room:Room) {
+		return room.room_mods.includes(user._id.toString()) || user._id.toString() == room.room_owner._id.toString();
 	}
 
 }  
