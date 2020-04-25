@@ -53,19 +53,23 @@ export class RoomsRepository {
 		return await _room.save();
 	}
 
-	public async getByName(name):Promise<Room> {
+	public async getByName(name:string):Promise<Room> {
 		return await this.RoomModel.findOne({ room_name: name }).collation( { locale: 'en', strength: 2 } );
 	}
 
-	public async getById(id):Promise<Room> {
+	public async getByNames(names:Array<string>):Promise<Array<Room>> {
+		return await this.RoomModel.find({ room_name: { $in: names } }).collation( { locale: 'en', strength: 2 } );
+	}
+
+	public async getById(id:string):Promise<Room> {
 		return await this.RoomModel.findOne({ _id: id });
 	}
 
-	public async getByUserId(id):Promise<Array<Room>> {
+	public async getByUserId(id:string):Promise<Array<Room>> {
 		return this.RoomModel.find({ room_users: id }).sort({ online_users: -1 }).limit(10);
 	}
 
-	public async getByAdminId(id):Promise<Array<Room>> {
+	public async getByAdminId(id:string):Promise<Array<Room>> {
 		return this.RoomModel.find({ 'room_owner._id': id }).sort({ online_users: -1 }).limit(10);
 	}
 
@@ -73,11 +77,22 @@ export class RoomsRepository {
 		return this.RoomModel.find({ 'room_options.privacy': 'public' }).sort({ online_users: -1 }).limit(10);
 	}
 
+	public async getBySocket(user:User, sid:string):Promise<Array<Room>> {
+		let rooms = await this.getUserRooms(user);
+		let names = [] as Array<string>;
+		for (let i = 0; i < rooms.length; i++) {
+			if (await this.socketInRoom(rooms[i], sid)) {
+				names.push(rooms[i]);
+			}
+		}
+		return this.getByNames(names);
+	}
+
 	public async getUserRooms(user:User):Promise<Array<string>> {
 		return await this.redis.getSet('rooms-'+user._id.toString());
 	}
 
-	public async socketInRoom(name, sid):Promise<boolean> {
+	public async socketInRoom(name:string, sid:string):Promise<boolean> {
 		return await this.redis.checkSetValue('sockets-'+name, sid) == 1;
 	}
 
@@ -89,11 +104,11 @@ export class RoomsRepository {
 		return await room.save();
 	}
 
-	public async removeSocketFromRoom(roomName, sid) {
+	public async removeSocketFromRoom(roomName:string, sid:string) {
 		await this.redis.removeSet('sockets-'+roomName, sid);
 	}
 
-	public async getOnlineUsers(name):Promise<Array<RoomUser>> {
+	public async getOnlineUsers(name:string):Promise<Array<RoomUser>> {
 		let data = await this.redis.getHash('users-'+name);
 		let users = [] as Array<RoomUser>;
 
@@ -103,7 +118,7 @@ export class RoomsRepository {
 		return users;
 	}
 
-	public async addUserToRoom(roomUser:RoomUser, room:Model | Room, sid, inc?) {
+	public async addUserToRoom(roomUser:RoomUser, room:Model | Room, sid:string, inc?) {
 		if (!room.room_users.includes(roomUser._id)) room.room_users.push(roomUser._id);
 		if(inc) room.online_users++;
 
@@ -117,15 +132,13 @@ export class RoomsRepository {
 		await this.redis.addHashKey('users-'+roomName, roomUser._id.toString(), roomUser);
 	}
 
-	public async removeUserFromRoom(user:User, roomName, sid) {
+	public async removeUserFromRoom(user:User, roomName:string) {
 		await this.redis.deleteHasKey('users-'+roomName, user._id.toString());
 		await this.redis.removeSet('rooms-'+user._id.toString(), roomName);
-		await this.redis.removeSet('sockets-'+roomName, sid);
-		await this.removeSocketFromRoom(roomName, sid);
 	}
 
-	public async decreaseOnlineUsersCount(rooms_name:Array<string>) {
-		await this.RoomModel.updateMany({ room_name: { $in: rooms_name } } ,  { $inc: { online_users: -1 } });
+	public async decreaseOnlineUsersCount(roomsName:Array<string>) {
+		await this.RoomModel.updateMany({ room_name: { $in: roomsName } } ,  { $inc: { online_users: -1 } });
 	}
 
 	private getRoomModel() {

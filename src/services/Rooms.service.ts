@@ -4,6 +4,7 @@ import { User, Err, Room, RoomUser } from '../models';
 import { RoomsRepository, UsersRepository } from '../repositorys';
 import { RoomsApi } from '../interfaces';
 import { EventEmitter } from 'events';
+import { RoomUsersService } from './RoomUsers.service';
 
 
 @injectable()
@@ -13,6 +14,7 @@ export class RoomsService implements RoomsApi<User, Room> {
 	private roomsEvents:EventEmitter = new EventEmitter();	
 
 	constructor(
+		private roomUsersService:RoomUsersService,
 		private roomRep:RoomsRepository,  
 		private usersRep:UsersRepository
 	) {}
@@ -53,7 +55,7 @@ export class RoomsService implements RoomsApi<User, Room> {
 			}
 			if (room.room_banned.includes(user._id)) throw new Err('User is banned!', 401);
 
-			await this.addUserToRoom(user, room, sid);
+			await this.roomUsersService.addUserToRoom(user, room, sid);
 
 			this.roomsEvents.emit('socket_joined_room', sid, user._id.toString(), room.room_name);
 			this.roomsEvents.emit('users_update', user.username+' joined the room', room.room_name);
@@ -63,7 +65,6 @@ export class RoomsService implements RoomsApi<User, Room> {
 			return room;
 
 		}catch(e) {
-			console.log(e);
 			throw new Err(e.error || 'Unable to join '+(room.room_name || room));
 		}
 
@@ -86,24 +87,12 @@ export class RoomsService implements RoomsApi<User, Room> {
 		return rooms;
 	}
 
-	public async modUser(user:User, userId:string, roomId:string) {
+	public async roomModerator(user:User, userId:string, roomId:string) {
 		let room = await this.roomRep.getById(roomId);
-		let roomUsers = await this.getOnline(room.room_name);
 
-		if (this.userCanModifyRoom(user, room) && room.room_users.includes(userId)) {
-			let is_mod = room.room_mods.includes(userId);
+		if (this.roomUsersService.is_ableToModifyRoom(user, room) && room.room_users.includes(userId)) {
 
-			if (is_mod) {
-				room.room_mods = room.room_mods.filter(id => id !== userId);
-			}else {
-				room.room_mods.push(userId);
-			}
-
-			let roomUser = roomUsers.find(u => u._id == userId) as RoomUser;
-			roomUser.is_mod = !is_mod;
-
-			await this.roomRep.update(room);
-			if (roomUser !== null) await this.roomRep.addOnlineUser(roomUser, room.room_name);
+			let roomUser = await this.roomUsersService.makeUserModerator(userId, room);
 
 			let msg = roomUser.is_mod ? roomUser.username+' is now a moderator' : roomUser.username+' is no longer a moderator';
 			this.roomsEvents.emit('users_update', msg, room.room_name);
@@ -114,51 +103,55 @@ export class RoomsService implements RoomsApi<User, Room> {
 		}
 	}
 
-	public async disconnect(user:User, sid) {
+	public async banUserFromRoom(user:User, userId:string, roomId:string) {
+		let room = await this.roomRep.getById(roomId);
+		let userToBan = await this.usersRep.getById(userId);
 
-		let userSockets = await this.usersRep.getSockets(user._id.toString());
-		let rooms = await this.roomRep.getUserRooms(user);
-		let dec = true;
+		if (this.roomUsersService.is_ableToModifyRoom(user, room) && 
+			room.room_users.includes(userId) && 
+			room.room_owner._id.toString() !== userId) {
+			
+			if (await this.roomUsersService.banUserFromRoom(userToBan, room)) {
+
+				let sockets = await this.usersRep.getSockets(userToBan._id.toString());
+				for (let i = 0; i < sockets.length; i++) {
+					if (await this.roomRep.socketInRoom(room.room_name, sockets[i])) {
+						this.roomsEvents.emit('socket_left_room', sockets[i], userToBan._id.toString(), room.room_name);
+					}
+				}
+
+				this.roomsEvents.emit('users_update', userToBan.username+' hase been banned!', room.room_name);
+				this.roomsEvents.emit('user_ban', userToBan, room);
+			}else {
+				this.roomsEvents.emit('users_update', null, room.room_name);
+			}
+			
+		}else {
+			throw new Err('Can\'t ban user', 401);
+		}
+	}
+
+	public async disconnect(user:User, sid) {
+		let rooms = await this.roomRep.getBySocket(user, sid);
+		let roomsNames = [] as Array<string>;
 
 		for (let i = 0; i < rooms.length; i++) {
-			dec = await this.leaveRoom(userSockets, sid, user, rooms[i]);
+			if (await this.roomUsersService.removeUserFromRoom(user, rooms[i], sid)) {
+				this.roomsEvents.emit('users_update', user.username+' left the room', rooms[i].room_name);
+				roomsNames.push(rooms[i].room_name);
+			}
+			this.roomsEvents.emit('socket_left_room', sid, user._id.toString(), rooms[i].room_name);
 		}
 
-		if (dec) await this.roomRep.decreaseOnlineUsersCount(rooms);
-
+		await this.roomRep.decreaseOnlineUsersCount(roomsNames);
 	}
 
 	public async leave(user:User, roomName, sid) {
-		let userSockets = await this.usersRep.getSockets(user._id.toString());
-		if (await this.leaveRoom(userSockets, sid, user, roomName)) {
-			await this.roomRep.decreaseOnlineUsersCount([roomName]);
+		if (await this.roomUsersService.removeUserFromRoom(user, roomName, sid)) {
+			this.roomsEvents.emit('users_update', user.username+' left the room', roomName);
 		}
-	}
-
-	private async leaveRoom(userSockets, sid, user:User, roomName) {
-
-		await this.roomRep.removeSocketFromRoom(roomName, sid);
 		this.roomsEvents.emit('socket_left_room', sid, user._id.toString(), roomName);
-
-		if (userSockets.length > 1) {
-
-			for (let x = 0; x < userSockets.length; x++) {
-				if (userSockets[x] !== sid) {
-					if (await this.roomRep.socketInRoom(roomName, userSockets[x])) return false;
-				}
-			}
-
-		}
-
-		await this.roomRep.removeUserFromRoom(user, roomName, sid);
-		this.roomsEvents.emit('users_update', user.username+' left the room', roomName);
-
-		return true;
-
-	}
-
-	public async getOnline(roomName:string):Promise<Array<RoomUser>> {
-		return await await this.roomRep.getOnlineUsers(roomName);
+		await this.roomRep.decreaseOnlineUsersCount([roomName]);
 	}
 
 	public async getRoom(user:User, roomId:string):Promise<Room> {
@@ -171,19 +164,19 @@ export class RoomsService implements RoomsApi<User, Room> {
 		}
 	}
 
-	private async addUserToRoom(user:User, room:Room, sid) {
-		
-		let inc = !await this.roomRep.userInRoom(user, room);
-		let roomUser = new RoomUser(user);
-
-		roomUser.is_admin = user._id.toString() == room.room_owner._id.toString();
-		roomUser.is_mod = room.room_mods.includes(user._id);
-		await this.roomRep.addUserToRoom(roomUser, room, sid, inc);
-
+	public async getOnline(roomName) {
+		return await this.roomRep.getOnlineUsers(roomName);
 	}
 
-	private userCanModifyRoom(user:User, room:Room) {
-		return room.room_mods.includes(user._id.toString()) || user._id.toString() == room.room_owner._id.toString();
-	}
+	public async getBanned(user:User, roomId):Promise<RoomUser[]> {
+		let room =  await this.getRoom(user, roomId);
+
+		if (this.roomUsersService.is_ableToModifyRoom(user, room)) {
+			return await this.roomUsersService.getRoomUsers(room.room_banned);
+		}else {
+			throw new Err('Can\'t get users', 401);
+		}
+
+	} 
 
 }  

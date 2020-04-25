@@ -39,6 +39,10 @@ export class Dispatcher {
 			this.ws.sendToRoom('ROOM_UPDATE', '', roomName);
 		});
 
+		this.roomsService.events.on('user_ban', (user, room) => {
+			this.ws.sendToSocket('BANNED', { _id: room._id.toString() }, user._id.toString());
+		});
+
 		this.messagesService.events.on('room_message', (message, roomName) => {
 			this.ws.sendToRoom('MESG', message, roomName);
 		});

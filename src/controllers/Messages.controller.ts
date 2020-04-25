@@ -37,7 +37,7 @@ export class MessagesController {
 			if (!messageValidator(req.body)) throw new Err("Bad Request!");
 
 			let message = await this.msgService.save(req.params.room, req.user, req.body.msg);
-			return res.status(200).send('');
+			return res.status(201).send();
 
 		}catch(e) {
 			Logger.Err(e.error || e);
@@ -55,7 +55,7 @@ export class MessagesController {
 			let roomId = req.params.room;
 			let mesgId = req.params.id;
 			await this.msgService.delete(roomId, req.user, mesgId);
-			return res.status(200).send('');
+			return res.status(200).send();
 
 		}catch(e) {
 			Logger.Err(e.error || e);

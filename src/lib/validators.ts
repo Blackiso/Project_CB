@@ -29,6 +29,7 @@ export let joinRoomValidator = (obj):boolean => {
 	let mustHave = ['room', 'sid'];
 	let check = objHasPropertys(obj, mustHave);
 	if (!nameValidator(obj.room)) throw new Err("Invalid name!");
+	if (typeof obj.sid !== "string") throw new Err("Invalid socket!");
 	
 	return check;
 }

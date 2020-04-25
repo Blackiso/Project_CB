@@ -41,26 +41,23 @@ export class UsersRepository {
 	}
 
 	public async getByEmail(email:string):Promise<User> {
-		let user = await this.UserModel.findOne({ user_email: email });
-		return user;
+		return await this.UserModel.findOne({ user_email: email });
 	}
 
 	public async getByUsername(username:string):Promise<User> {
-		let user = await this.UserModel.findOne({ username: username }).collation({ locale: 'en', strength: 2 });
-		return user;
+		return await this.UserModel.findOne({ username: username }).collation({ locale: 'en', strength: 2 });
 	}
 
-	public async getById(id:number):Promise<User> {
-		let user = await this.UserModel.findOne({ _id: id });
-		return user;
+	public async getById(id:string):Promise<User> {
+		return await this.UserModel.findOne({ _id: id });
 	}
 
 	public async getSockets(userId) {
 		return await this.redis.getAllList('sockets-'+userId);
 	}
 
-	public getUsersById(ids:Array<number>):Promise<any> | null {
-		return null;
+	public async getByIds(ids:string[]):Promise<User[]> {
+		return await this.UserModel.find({ _id: { $in: ids } });
 	}
 
 	public async checkProperty(obj) {

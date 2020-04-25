@@ -102,8 +102,45 @@ export class RoomsController {
 			let roomId = req.params.roomId;
 			let userId = req.params.id;
 
-			await this.roomsService.modUser(req.user, userId, roomId);
+			await this.roomsService.roomModerator(req.user, userId, roomId);
 			return res.status(200).send();
+
+		}catch(e) {
+			Logger.Err(e.error || e);
+			return res.status(e.code || 400).send(e);
+		}
+
+	}
+
+	@Post(':roomId/users/:id/ban')
+	@Middleware(AuthenticationMiddleware)
+	public async ban(req:Request | any, res:Response) {
+
+		try {
+
+			let roomId = req.params.roomId;
+			let userId = req.params.id;
+
+			await this.roomsService.banUserFromRoom(req.user, userId, roomId);
+			return res.status(200).send();
+
+		}catch(e) {
+			Logger.Err(e.error || e);
+			return res.status(e.code || 400).send(e);
+		}
+
+	}
+
+	@Get(':roomId/banned')
+	@Middleware(AuthenticationMiddleware)
+	public async getBanned(req:Request | any, res:Response) {
+
+		try {
+
+			let roomId = req.params.roomId;
+
+			let response = await this.roomsService.getBanned(req.user, roomId);
+			return res.status(200).send(response);
 
 		}catch(e) {
 			Logger.Err(e.error || e);

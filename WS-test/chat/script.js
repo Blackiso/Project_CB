@@ -7,6 +7,7 @@ var global_username;
 var global_room_username;
 var global_messages = [];
 var global_users;
+var global_banned_users = [];
 
 //HTML Elems
 var roomLobby = document.querySelector('#roomLobby');
@@ -28,6 +29,7 @@ var messagesCont = document.querySelector('#messagesCont');
 var messageInput = document.querySelector('#messageInput');
 var roomName = document.querySelector('#roomName');
 var onlineUsers = document.querySelector('#onlineUsers');
+var bannedUsers = document.querySelector('#bannedUsers');
 
 
 function ajax(metod, link, body, call, t = null) {
@@ -83,32 +85,35 @@ function newInfo(msg) {
 // 	<span>Blackiso</span>
 // </div>
 
-function newUsersList(users) {
+function newUsersList(users, container, is_ban = false) {
 	if (global_room == null) {
 		setTimeout(() => {
-			newUsersList(users);
+			newUsersList(users, onlineUsers);
 		}, 5);
 		return;
 	}
-	onlineUsers.innerHTML = "";
+	container.innerHTML = "";
 	users.forEach(user => {
 		var div = document.createElement('DIV');
 		var span = document.createElement('SPAN');
-		// var btn1 = document.createElement('BUTTON');
+		var btn1 = document.createElement('BUTTON');
 		var btn2 = document.createElement('BUTTON');
 
 		div.classList.add('user');
 		if (user.is_mod) div.style.background = 'pink';
 		if (user.is_admin) div.style.background = 'red';
 		span.innerHTML = user.username;
-		// btn1.innerHTML = 'Ban user';
+		btn1.innerHTML = is_ban ? 'Unban user' : 'Ban user';
 		btn2.innerHTML = user.is_mod ? 'Unmod user' : 'Mod user';
+		btn1.onclick = banUser
 		btn2.onclick = modUser;
+		btn1.dataset.id = user._id;
 		btn2.dataset.id = user._id;
 		div.appendChild(span);
-		// if (!is_me(user.username) && global_room.user.is_admin || global_room.user.is_mod) div.appendChild(btn1);
-		if (!is_me(user.username) && global_room.user.is_admin) div.appendChild(btn2);
-		onlineUsers.appendChild(div);
+
+		if (!is_me(user.username) && !user.is_admin && (global_room.user.is_admin || global_room.user.is_mod)) div.appendChild(btn1);
+		if (!is_me(user.username) && global_room.user.is_admin && !is_ban) div.appendChild(btn2);
+		container.appendChild(div);
 	});
 }
 
@@ -151,11 +156,28 @@ function connectSocket() {
 	mySocket.on('USERS', (data) => {
 		console.log(data);
 		global_users = data;
-		newUsersList(data);	
+		newUsersList(data, onlineUsers);	
+		getBanned(roomId);
 	});
 
 	mySocket.on('ROOM_UPDATE', () => {
 		getRoom(global_room._id);
+	});
+
+	mySocket.on('BANNED', (data) => {
+		if (data._id == global_room._id) {
+			roomId = null;
+			roomName.innerHTML = null;
+			global_room_username = null;
+			global_room = null;
+			global_users = [];
+			roomLobby.classList.remove('hide');
+		}
+	});
+
+	mySocket.on('USER_BANNED', (data) => {
+		global_banned_users.push(data);
+		newUsersList(global_banned_users, bannedUsers, true);
 	});
 }
 
@@ -237,6 +259,8 @@ function createRoom(room) {
 
 function getRoom(id) {
 
+	console.log('Getting room..');
+
 	ajax('GET', 'http://'+host+'/api/rooms/'+id, {}, (data) => {
 
 		console.log(data);
@@ -247,7 +271,22 @@ function getRoom(id) {
 			global_room_username = data.room_owner.username;
 			global_room = data;
 			displayMessages();
+			newUsersList(global_users, onlineUsers);
 		}
+
+	}, token);
+}
+
+
+function getBanned(id) {
+
+	console.log('Getting banned..');
+
+	ajax('GET', 'http://'+host+'/api/rooms/'+id+'/banned', {}, (data) => {
+
+		console.log(data);
+		global_banned_users = data;
+		newUsersList(global_banned_users, bannedUsers, true);
 
 	}, token);
 }
@@ -276,19 +315,16 @@ function deleteMessage(e) {
 
 function modUser(e) {
 	let id = e.currentTarget.dataset.id;
-	let user = getUser(id);
 	ajax('POST', 'http://'+host+'/api/rooms/'+roomId+'/users/'+id+'/mod', { }, (data) => {
 		console.log('moded');	
 	}, token);
 }
 
 function banUser(e) {
-	// let id = e.currentTarget.dataset.id;
-	// let user = getUser(id);
-	// let x = user.is_mod ? 'ban' : 'unban';
-	// ajax('POST', 'http://'+host+'/api/room/'+roomId+'/user/'+id+'/'+x, { }, (data) => {
-	// 	console.log('moded');	
-	// }, token);
+	let id = e.currentTarget.dataset.id;
+	ajax('POST', 'http://'+host+'/api/rooms/'+roomId+'/users/'+id+'/ban', { }, (data) => {
+
+	}, token);
 }
 
 
@@ -302,6 +338,11 @@ function displayMessages() {
 			newMessage(data._id, data.user.username, data.msg, x, data.deleted);
 		}	
 	});
+}
+
+function removeBanned(id) {
+	global_banned_users = global_banned_users.filter(u => u._id !== id);
+	newUsersList(global_banned_users, bannedUsers, true);
 }
 
 roomLobbyJoin.addEventListener('click', () => {

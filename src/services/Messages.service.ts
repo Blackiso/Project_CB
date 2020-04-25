@@ -67,10 +67,10 @@ export class MessagesService implements MessagesApi<User, Message> {
 		let room = await this.getRoom(roomId, user);
 		await this.canUserMessageRoom(room, user);
 
-		if (room.room_mods.includes(user._id) || room.room_owner._id.toString() == user._id.toString()) {
+		if ((room.room_mods.includes(user._id) || room.room_owner._id.toString() == user._id.toString())) {
 			
 			let message = await this.msgRep.getMessageById(room.room_name, messageId);
-			let delMsg = 'Message removed';
+			let delMsg = 'Message deleted by a moderator.';
 
 			if (message !== null) {
 				message.msg = delMsg;
