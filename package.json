@@ -4,6 +4,7 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
+		"start": "ts-node-dev --respawn --transpileOnly ./src/index.ts",
 		"tsc": "tsc",
 		"dev": "ts-node-dev --respawn --transpileOnly ./src/index.ts",
 		"ws-dev": "ts-node-dev --respawn --transpileOnly ./src/websocket/index.ts",
