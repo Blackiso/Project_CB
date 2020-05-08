@@ -8,3 +8,5 @@ export * from './responses/RoomDetails';
 export * from './responses/RoomDetailsAdv';
 export * from './persistence/Message';
 export * from './RoomUser';
+export * from './persistence/Friend';
+export * from './FriendsList';

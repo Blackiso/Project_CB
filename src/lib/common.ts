@@ -3,7 +3,7 @@ import { Err } from '../models';
 import crypto  from 'crypto';
 
 
-export let objHasPropertys = (obj, props:Array<string>) => {
+export let objHasPropertys = (obj, props:Array<string>, x = false) => {
 	let check = false;
 	props.forEach(pr => {
 		for (let prop in obj) {
@@ -11,7 +11,7 @@ export let objHasPropertys = (obj, props:Array<string>) => {
 				check = true;
 				break;
 			}else {
-				check = false;
+				if (!x) check = false;
 			}
 		}
 	});

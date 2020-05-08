@@ -39,6 +39,19 @@ export let messageValidator = (obj):boolean => {
 	return objHasPropertys(obj, mustHave);
 }
 
+export let updateRoomValidator = (obj):boolean => {
+	let mustHave = ['privacy', 'language_filter', 'allow_invites'];
+
+	if (typeof obj.privacy !== 'undefined') {
+		if (obj.privacy !== "public" && obj.privacy !== "private") throw new Err("Invalid privacy!");
+	}
+	if (typeof obj.language_filter !== 'undefined' && typeof obj.language_filter !== 'boolean') return false;
+	if (typeof obj.allow_invites !== 'undefined' && typeof obj.allow_invites !== 'boolean') return false;
+
+	console.log('passed');
+	return objHasPropertys(obj, mustHave, true);
+}
+
 export let emailValidator = (email:string):boolean => {
 	return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email);
 };

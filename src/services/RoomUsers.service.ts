@@ -25,7 +25,10 @@ export class RoomUsersService {
 
 	public async banUserFromRoom(user:User, room:Room):Promise<boolean> {
 		if (!room.room_banned.includes(user._id.toString())) {
+
 			room.room_banned.push(user._id.toString());
+			room.room_mods = room.room_mods.filter(u => u !== user._id.toString());
+
 			await this.roomRep.update(room);
 			await this.roomRep.removeUserFromRoom(user, room.room_name);
 			return true;
@@ -63,13 +66,14 @@ export class RoomUsersService {
 		return false;
 	}
 
-	public async getRoomUsers(usersIds:string[]) {
+	public async getRoomUsers(user:User, usersIds:string[]) {
 		let users = await this.usersRep.getByIds(usersIds);
-		return users.map(user => new RoomUser(user));
+		return users.map(user => new RoomUser(user, user.user_friends.includes(user._id.toString())));
 	}
 
 	public is_ableToModifyRoom(user:User, room:Room):boolean {
-		return room.room_mods.includes(user._id.toString()) || user._id.toString() == room.room_owner._id.toString();
+		return !room.room_banned.includes(user._id.toString()) && 
+				(room.room_mods.includes(user._id.toString()) || user._id.toString() == room.room_owner._id.toString());
 	}
 
 	public async is_inRoom(user:User, room:Room):Promise<boolean> {

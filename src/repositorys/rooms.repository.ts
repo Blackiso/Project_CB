@@ -104,6 +104,10 @@ export class RoomsRepository {
 		return await room.save();
 	}
 
+	public async delete(room:Room) {
+		return this.RoomModel.findByIdAndDelete(room._id);
+	}
+
 	public async removeSocketFromRoom(roomName:string, sid:string) {
 		await this.redis.removeSet('sockets-'+roomName, sid);
 	}
@@ -129,11 +133,15 @@ export class RoomsRepository {
 	}
 
 	public async addOnlineUser(roomUser:RoomUser, roomName:string) {
-		await this.redis.addHashKey('users-'+roomName, roomUser._id.toString(), roomUser);
+		return await this.redis.addHashKey('users-'+roomName, roomUser._id.toString(), roomUser);
+	}
+
+	public async deleteOnlineUsers(roomName:string) {
+		return await this.redis.deleteHash('users-'+roomName);
 	}
 
 	public async removeUserFromRoom(user:User, roomName:string) {
-		await this.redis.deleteHasKey('users-'+roomName, user._id.toString());
+		await this.redis.deleteHashKey('users-'+roomName, user._id.toString());
 		await this.redis.removeSet('rooms-'+user._id.toString(), roomName);
 	}
 

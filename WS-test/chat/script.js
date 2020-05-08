@@ -68,7 +68,7 @@ function newMessage(id, username, msg, admin = false, del = false) {
 	p.innerHTML = msg;
 	div.appendChild(span);
 	div.appendChild(p);
-	if (admin) div.appendChild(span2);
+	if (admin && !del) div.appendChild(span2);
 	messagesCont.appendChild(div);
 	messagesCont.scrollTop = messagesCont.scrollHeight;
 }
@@ -173,6 +173,16 @@ function connectSocket() {
 			global_users = [];
 			roomLobby.classList.remove('hide');
 		}
+	});
+
+	mySocket.on('ROOM_DELETED', () => {
+		roomId = null;
+		roomName.innerHTML = null;
+		global_room_username = null;
+		global_room = null;
+		global_users = [];
+		roomLobby.classList.remove('hide');
+		messagesCont.innerHTML = '';
 	});
 
 	mySocket.on('USER_BANNED', (data) => {

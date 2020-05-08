@@ -51,6 +51,7 @@ export class AuthenticationController {
 	@Get('authenticate')
 	@Middleware(AuthenticationMiddleware)
 	private autheticate(req:Request | any, res:Response) {
+		this.authService.setUserOnline(req.user);
 		return res.status(200).send(new UserResponse(req.user));
 	}
 

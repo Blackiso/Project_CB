@@ -39,6 +39,10 @@ export class Dispatcher {
 			this.ws.sendToRoom('ROOM_UPDATE', '', roomName);
 		});
 
+		this.roomsService.events.on('room_deleted', (roomName) => {
+			this.ws.sendToRoom('ROOM_DELETED', '', roomName);
+		});
+
 		this.roomsService.events.on('user_ban', (user, room) => {
 			this.ws.sendToSocket('BANNED', { _id: room._id.toString() }, user._id.toString());
 		});

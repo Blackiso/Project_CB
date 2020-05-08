@@ -60,9 +60,14 @@ export class RedisClient {
 		return hget(hash, key);
 	}
 
-	deleteHasKey(hash, key) {
+	deleteHashKey(hash, key) {
 		let hdel = promisify(this.client.hdel).bind(this.client);
 		return hdel(hash, key);
+	}
+
+	deleteHash(hash) {
+		let del = promisify(this.client.del).bind(this.client);
+		return del(hash);
 	}
 
 	getHash(hash) {

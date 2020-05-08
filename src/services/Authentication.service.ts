@@ -45,6 +45,12 @@ export class AuthenticationService implements AuthenticationApi {
 		return new JWT().sign(user);
 	}
 
+	//change this 
+	public async setUserOnline(user:User) {
+		user.online = true;
+		this.userRep.update(user);
+	}
+
 	public async authenticate(token:JWT):Promise<User> {
 		if (!token) throw new Err('Token not found!');
 		let payload = token.getPayload();

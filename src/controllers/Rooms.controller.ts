@@ -1,10 +1,10 @@
 import { injectable } from 'tsyringe';
 import { Request, Response } from 'express';
-import { Controller, Get, Post, Middleware } from '@overnightjs/core';
+import { Controller, Get, Post, Patch, Delete, Middleware } from '@overnightjs/core';
 import { AuthenticationMiddleware } from '../middleware';
 import { Logger } from '@overnightjs/logger';
 import { RoomsService } from '../services';
-import { roomCreateValidator, joinRoomValidator } from '../lib/validators';
+import { roomCreateValidator, joinRoomValidator, updateRoomValidator } from '../lib/validators';
 import { Err, Room, RoomResponse, RoomDetailsAdv, RoomDetails } from '../models';
 
 
@@ -141,6 +141,41 @@ export class RoomsController {
 
 			let response = await this.roomsService.getBanned(req.user, roomId);
 			return res.status(200).send(response);
+
+		}catch(e) {
+			Logger.Err(e.error || e);
+			return res.status(e.code || 400).send(e);
+		}
+
+	}
+
+	@Patch(':roomId/update')
+	@Middleware(AuthenticationMiddleware)
+	public async update(req:Request | any, res:Response) {
+
+		try {
+
+			if (!updateRoomValidator(req.body)) throw new Err("Bad Request!");
+
+			let roomId = req.params.roomId;
+			let response = await this.roomsService.updateOptions(req.user, roomId, req.body);
+			return res.status(200).send();
+
+		}catch(e) {
+			Logger.Err(e.error || e);
+			return res.status(e.code || 400).send(e);
+		}
+
+	}
+
+	@Delete(':roomId/delete')
+	@Middleware(AuthenticationMiddleware)
+	public async delete(req:Request | any, res:Response) {
+
+		try {
+			let roomId = req.params.roomId;
+			let response = await this.roomsService.deleteRoom(req.user, roomId);
+			return res.status(200).send();
 
 		}catch(e) {
 			Logger.Err(e.error || e);

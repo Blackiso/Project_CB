@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Schema, ObjectId } from 'mongoose';
+import { Schema, ObjectId, Model } from 'mongoose';
 import { injectable, singleton } from "tsyringe";
 import { User, Err } from '../models';
 import { Logger } from '@overnightjs/logger';
@@ -21,7 +21,9 @@ export class UsersRepository {
 			user_key: String,
 			user_password: String,
 			register_date: Date,
-			user_friends: [ObjectId]
+			friends_requests: [String],
+			user_friends: [String],
+			online: Boolean
 		});
 		this.usersSchema.index({ username: 1 }, { collation: { locale: 'en', strength: 2 } });
 		this.UserModel = this.getModel();
@@ -34,7 +36,8 @@ export class UsersRepository {
 			user_image: 'default.png',
 			user_key: user.user_key,
 			user_password: user.user_password,
-			register_date: new Date()
+			register_date: new Date(),
+			online: true
 		});
 
 		return await _user.save();
@@ -52,6 +55,10 @@ export class UsersRepository {
 		return await this.UserModel.findOne({ _id: id });
 	}
 
+	public async getOnlineByIds(ids:Array<string>):Promise<Array<User>> {
+		return await this.UserModel.find({ _id: { $in: ids }, online: true });
+	}
+
 	public async getSockets(userId) {
 		return await this.redis.getAllList('sockets-'+userId);
 	}
@@ -65,6 +72,10 @@ export class UsersRepository {
 			return false;
 		}
 		return true;
+	}
+
+	public update(user:Model):Promise<any> {
+		return user.save();
 	}
 
 	private getModel() { 
