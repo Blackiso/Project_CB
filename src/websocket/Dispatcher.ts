@@ -1,8 +1,10 @@
 import { singleton, injectable } from 'tsyringe';
-import { RoomsService, MessagesService } from '../services';
+import { RoomsService, MessagesService, UsersService } from '../services';
 import { EventEmitter } from 'events';
 import { SocketsHandler } from './SocketsHandler';
 import { Logger } from '@overnightjs/logger';
+import { IUser } from '../models';
+
 
 
 @injectable()
@@ -11,6 +13,7 @@ export class Dispatcher {
 	
 	constructor(
 		private roomsService:RoomsService, 
+		private usersService:UsersService, 
 		private messagesService:MessagesService, 
 		private ws:SocketsHandler
 	) {
@@ -57,10 +60,11 @@ export class Dispatcher {
 	}
 
 	handdleOuterEvents(type, ...values) {
+		let user;
 		switch (type) {
 			case 'disconnect':
 				let sid = values[0];
-				let user = values[1];
+				user = values[1] as IUser;
 
 				this.roomsService.disconnect(user, sid)
 					.then(x => {
@@ -68,9 +72,10 @@ export class Dispatcher {
 						this.ws.removeSocket(user, sid);
 					}).catch(Logger.Err);
 				break;
-			
-			default:
-				// code...
+
+			case 'connected':
+				user = values[0] as IUser;
+				this.usersService.connected(user);
 				break;
 		}
 	}

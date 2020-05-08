@@ -1,4 +1,4 @@
-import { User } from './User';
+import { IUser } from './User';
 
 export class Message {
 	
@@ -12,7 +12,7 @@ export class Message {
 	};
 	deleted:boolean = false;
 
-	constructor(id:string, msg:string, date:Date, user:User) {
+	constructor(id:string, msg:string, date:Date, user:IUser) {
 		this._id = id;
 		this.msg = msg;
 		this.date = date;

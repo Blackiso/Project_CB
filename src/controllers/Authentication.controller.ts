@@ -1,9 +1,10 @@
 import { injectable } from 'tsyringe';
 import { Request, Response } from 'express';
 import { Controller, Get, Post, Middleware } from '@overnightjs/core';
-import { AuthenticationService } from '../services';
+import { AuthenticationService, UsersService } from '../services';
 import { Logger } from '@overnightjs/logger';
 import { registerUserValidator, loginUserValidator } from '../lib/validators';
+import { JWT } from '../lib';
 import { Err, JWTResponse, UserResponse } from '../models';
 import { AuthenticationMiddleware } from '../middleware';
 
@@ -12,7 +13,10 @@ import { AuthenticationMiddleware } from '../middleware';
 @Controller('api/authentication')
 export class AuthenticationController {
 
-	constructor(private authService:AuthenticationService) {}
+	constructor(
+		private authService:AuthenticationService,
+		private userService:UsersService
+	) {}
 
 	@Post('register')
 	private async register(req:Request, res:Response) {
@@ -20,7 +24,8 @@ export class AuthenticationController {
 		try {
 			if (!registerUserValidator(req.body)) throw new Err("Bad Request!");
 
-			let token = await this.authService.register(req.body.username, req.body.email, req.body.password);
+			let user = await this.userService.createUser(req.body.username, req.body.email, req.body.password);
+			let token = new JWT().sign(user);
 			let response = new JWTResponse(token);
 
 			return res.status(200).send(response);
@@ -37,7 +42,8 @@ export class AuthenticationController {
 		try {
 			if (!loginUserValidator(req.body)) throw new Err("Bad Request!");
 
-			let token = await this.authService.login(req.body.username, req.body.password);
+			let user = await this.authService.login(req.body.username, req.body.password);
+			let token = new JWT().sign(user);
 			let response = new JWTResponse(token);
 
 			return res.status(200).send(response);
@@ -51,7 +57,6 @@ export class AuthenticationController {
 	@Get('authenticate')
 	@Middleware(AuthenticationMiddleware)
 	private autheticate(req:Request | any, res:Response) {
-		this.authService.setUserOnline(req.user);
 		return res.status(200).send(new UserResponse(req.user));
 	}
 

@@ -4,6 +4,8 @@ import { Logger } from '@overnightjs/logger';
 import { EventEmitter } from 'events';
 import { JWT } from '../lib';
 import { Err } from '../models';
+import { Request } from 'express';
+
 
 
 export let AuthenticationMiddleware = async (req:any, res:any, next:any) => {
@@ -56,6 +58,11 @@ export let JwtMiddleware = (req:any, res:any, next:any) => {
 		req.token = null;
 	}
 
+	next();
+}
+
+export let requestUrlLogger = (req:Request, res:any, next:any) => {
+	Logger.Info(req.path);
 	next();
 }
 

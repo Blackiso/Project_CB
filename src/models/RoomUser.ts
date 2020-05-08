@@ -1,4 +1,4 @@
-import { User } from './persistence/User';
+import { IUser } from './persistence/User';
 
 export class RoomUser {
 
@@ -9,7 +9,7 @@ export class RoomUser {
  	is_mod:boolean;
  	is_friend:boolean;
 
- 	constructor(user:User, is_friend:boolean = false) {
+ 	constructor(user:IUser, is_friend:boolean = false) {
  		this._id = user._id;
  		this.username = user.username;
  		this.user_image = user.user_image;

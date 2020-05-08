@@ -40,6 +40,8 @@ export class SocketServer {
 		socket.on('disconnect', () => {
 			this.dispatcher.handdleOuterEvents('disconnect', socket.id, socket.user);
 		});
+
+		this.dispatcher.handdleOuterEvents('connected', socket.user);
 		this.socketsHandler.addSocket(socket);
 	}
 

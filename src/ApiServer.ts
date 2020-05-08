@@ -4,7 +4,7 @@ import * as controllers from './controllers';
 import { container } from "tsyringe";
 import { Logger } from '@overnightjs/logger';
 import useragent from 'express-useragent';
-import { JwtMiddleware } from './middleware';
+import { JwtMiddleware, requestUrlLogger } from './middleware';
 import { MongoDb } from './lib';
 
 //dev only
@@ -12,12 +12,13 @@ import cors from 'cors';
 
 export class ApiServer extends Server {
 
-	constructor() {
+    constructor() {
         super();
 
         let db = new MongoDb();
 
         this.app.use(cors());
+        this.app.use(requestUrlLogger);
 
         this.app.use(bodyParser.json({ type: '*/*' }));
         this.app.use(bodyParser.urlencoded({extended: true}));
@@ -25,9 +26,9 @@ export class ApiServer extends Server {
         this.app.use(JwtMiddleware);
 
         this.setupControllers();
-	}
+    }
 
-	private setupControllers():void {
+    private setupControllers():void {
         const ctlrInstances = [];
         for (const name in controllers) {
             if (controllers.hasOwnProperty(name)) {

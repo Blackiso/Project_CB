@@ -1,4 +1,4 @@
-import { User } from './User';
+import { IUser } from './User';
 
 export class Friend {
 	
@@ -7,7 +7,7 @@ export class Friend {
 	user_image:string;
 	online:boolean = false;
 
-	constructor(user:User) {
+	constructor(user:IUser) {
 		this._id = user._id;
 		this.username = user.username;
 		this.user_image = user.user_image;

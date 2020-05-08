@@ -3,3 +3,4 @@ export * from './Rooms.service';
 export * from './Messages.service';
 export * from './RoomUsers.service';
 export * from './FriendsList.service';
+export * from './Users.service';
