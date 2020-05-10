@@ -1,4 +1,5 @@
-import { Room } from '../persistence/Room';
+import { IRoom } from '../persistence/Room';
+import { IUser } from '../persistence/User';
 
 export class RoomDetails {
  	
@@ -17,13 +18,13 @@ export class RoomDetails {
  		is_admin: false
  	};
 
- 	constructor(room:Room, is_mod:boolean, is_admin:boolean) {
+ 	constructor(room:IRoom, user:IUser) {
  		this._id = room._id;
  		this.room_name = room.room_name;
  		this.room_owner = room.room_owner;
  		this.room_options.privacy = room.room_options.privacy;
- 		this.user.is_mod = is_mod;
- 		this.user.is_admin = is_admin;
+ 		this.user.is_mod = user.is_mod(room);
+ 		this.user.is_admin = user.is_admin(room);
  	}
 
 }

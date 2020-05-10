@@ -33,18 +33,21 @@ const UserSchema = new Schema({
 });
 
 UserSchema.index({ username: 1 }, { collation: { locale: 'en', strength: 2 } });
-let model = mongoose.model<IUser>('User', UserSchema);
 
-model.is_mod = function (room:IRoom):boolean {
+UserSchema.methods.is_mod = function (room:IRoom):boolean {
 	return room.room_mods.includes(this._id.toString());
 };
 
-model.is_admin = function (room:IRoom):boolean {
+UserSchema.methods.is_admin = function (room:IRoom):boolean {
 	return room.room_owner._id.toString() == this._id.toString();
 };
 
-model.can_update = function (room:IRoom):boolean {
+UserSchema.methods.in_room = function (room:IRoom):boolean {
+	return room.room_users.includes(this._id.toString());
+};
+
+UserSchema.methods.can_operate = function (room:IRoom):boolean {
 	return this.is_admin(room) || this.is_mod(room);
 };
 
-export default model;
+export default mongoose.model<IUser>('User', UserSchema);

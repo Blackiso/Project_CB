@@ -1,7 +1,7 @@
 import { RoomsRepository, MessagesRepository, UsersRepository } from '../repositorys';
 import { Logger } from '@overnightjs/logger';
 import { injectable, singleton } from "tsyringe";
-import { Err, User, Room, Message } from '../models';
+import { Err, IUser, IRoom, Message } from '../models';
 import { generate24Bit, clearNullArray } from '../lib/common';
 import { MessagesApi } from '../interfaces';
 import { EventEmitter } from 'events';
@@ -9,7 +9,7 @@ import { EventEmitter } from 'events';
 
 @injectable()
 @singleton()
-export class MessagesService implements MessagesApi<User, Message> {
+export class MessagesService implements MessagesApi<IUser, Message> {
 
 	private messagesEvents:EventEmitter = new EventEmitter();	
 	
@@ -23,7 +23,11 @@ export class MessagesService implements MessagesApi<User, Message> {
 		return this.messagesEvents;
 	}
 
-	public async save(roomId:string, user:User, msg:string):Promise<Message> {
+	public async deleteAllRoomMessages(room:IRoom) {
+		await this.msgRep.deleteAllMessageIds(room.room_name);
+	}
+
+	public async save(roomId:string, user:IUser, msg:string):Promise<Message> {
 		let room = await this.getRoom(roomId, user);
 		let message = new Message(generate24Bit(), msg, new Date(), user);
 
@@ -35,7 +39,7 @@ export class MessagesService implements MessagesApi<User, Message> {
 		return message;
 	}
 
-	public async list(roomId:string, user:User):Promise<Message[]> {
+	public async list(roomId:string, user:IUser):Promise<Message[]> {
 		let room = await this.getRoom(roomId, user);
 		await this.canUserMessageRoom(room, user);
 
@@ -63,7 +67,7 @@ export class MessagesService implements MessagesApi<User, Message> {
 		return clearNullArray(messages).reverse();
 	}
 
-	public async delete(roomId:string, user:User, messageId:string) {
+	public async delete(roomId:string, user:IUser, messageId:string) {
 		let room = await this.getRoom(roomId, user);
 		await this.canUserMessageRoom(room, user);
 
@@ -88,7 +92,7 @@ export class MessagesService implements MessagesApi<User, Message> {
 
 	}
 
-	private async canUserMessageRoom(room:Room, user:User) {
+	private async canUserMessageRoom(room:IRoom, user:IUser) {
 		if (room.room_banned.includes(user._id)) {
 			throw new Err('User is banned from room', 401);
 		}
@@ -103,10 +107,10 @@ export class MessagesService implements MessagesApi<User, Message> {
 		}
 	}
 
-	private async getRoom(roomId, user:User) {
+	private async getRoom(roomId, user:IUser) {
 		let room = await this.roomRep.getById(roomId);
 		if (!room) throw new Err('Room not found!');
-		return room as Room;
+		return room as IRoom;
 	}
 
 }

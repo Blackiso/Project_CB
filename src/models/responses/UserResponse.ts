@@ -1,4 +1,4 @@
-import { User } from '../persistence/User';
+import { IUser } from '../persistence/User';
 
 export class UserResponse {
  	
@@ -7,7 +7,7 @@ export class UserResponse {
  	user_email:string;
  	user_image:string;
 
- 	constructor(user:User) {
+ 	constructor(user:IUser) {
  		this._id = user._id;
  		this.username = user.username;
  		this.user_email = user.user_email;

@@ -1,4 +1,4 @@
-import { Room } from '../persistence/Room';
+import { IRoom } from '../persistence/Room';
 
 export class RoomResponse {
  	
@@ -10,7 +10,7 @@ export class RoomResponse {
  		privacy: ""
  	};
 
- 	constructor(room:Room) {
+ 	constructor(room:IRoom) {
  		this._id = room._id;
  		this.room_name = room.room_name;
  		this.room_owner = room.room_owner;

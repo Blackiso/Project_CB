@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { Schema, ObjectId, Model } from 'mongoose';
 import { injectable, singleton } from "tsyringe";
-import { IUser, Err } from '../models';
+import { IUser, Err, IRoom } from '../models';
 import User from '../models/persistence/User';
 import { Logger } from '@overnightjs/logger';
 import { RedisClient } from '../lib';
@@ -28,6 +28,8 @@ export class UsersRepository {
 			register_date: new Date(),
 			online: true
 		});
+		let x = {} as IRoom;
+		console.log(_user.is_admin(x));
 
 		return await _user.save();
 	}
