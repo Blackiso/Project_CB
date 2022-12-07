@@ -36,7 +36,7 @@
 		"@overnightjs/logger": "^1.1.10",
 		"@types/socket.io": "^2.1.4",
 		"bcrypt": "^4.0.0",
-		"body-parser": "^1.19.0",
+		"body-parser": "^1.20.1",
 		"express-useragent": "^1.0.13",
 		"jsonwebtoken": "^8.5.1",
 		"mongodb": "^3.5.5",
